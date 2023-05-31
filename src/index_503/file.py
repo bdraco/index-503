@@ -1,13 +1,14 @@
 import logging
 import os
 import tempfile
+from pathlib import Path
 
 _LOGGER = logging.getLogger(__name__)
 
 
 # from https://github.com/home-assistant/core/blob/dev/homeassistant/util/file.py
 def write_utf8_file(
-    filename: str,
+    filename: Path,
     utf8_data: str,
     private: bool = False,
 ) -> None:

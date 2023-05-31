@@ -169,6 +169,31 @@ files = [
 ]
 
 [[package]]
+name = "consolekit"
+version = "1.4.1"
+description = "Additional utilities for click."
+category = "main"
+optional = false
+python-versions = ">=3.6.1"
+files = [
+    {file = "consolekit-1.4.1-py3-none-any.whl", hash = "sha256:698dca1d1b712b76efc115922a8c8d679bf0d97cadb917404d5f68a1b3f300d7"},
+    {file = "consolekit-1.4.1.tar.gz", hash = "sha256:2009782cd118fcdf71231af452e791a8a6e1a260718bea2ee50ff193d4757ead"},
+]
+
+[package.dependencies]
+click = ">=7.1.2"
+colorama = {version = ">=0.4.3", markers = "python_version < \"3.10\" and platform_system == \"Windows\""}
+deprecation-alias = ">=0.1.1"
+domdf-python-tools = ">=2.6.0"
+mistletoe = ">=0.7.2"
+typing-extensions = ">=3.10.0.0,<3.10.0.1 || >3.10.0.1"
+
+[package.extras]
+all = ["coincidence (>=0.1.0)", "psutil (>=5.8.0)", "pytest (>=6.0.0)", "pytest-regressions (>=2.0.2)"]
+terminals = ["psutil (>=5.8.0)"]
+testing = ["coincidence (>=0.1.0)", "pytest (>=6.0.0)", "pytest-regressions (>=2.0.2)"]
+
+[[package]]
 name = "coverage"
 version = "7.2.7"
 description = "Code coverage measurement for Python"
@@ -243,6 +268,37 @@ tomli = {version = "*", optional = true, markers = "python_full_version <= \"3.1
 
 [package.extras]
 toml = ["tomli"]
+
+[[package]]
+name = "deprecation"
+version = "2.1.0"
+description = "A library to handle automated deprecations"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "deprecation-2.1.0-py2.py3-none-any.whl", hash = "sha256:a10811591210e1fb0e768a8c25517cabeabcba6f0bf96564f8ff45189f90b14a"},
+    {file = "deprecation-2.1.0.tar.gz", hash = "sha256:72b3bde64e5d778694b0cf68178aed03d15e15477116add3fb773e581f9518ff"},
+]
+
+[package.dependencies]
+packaging = "*"
+
+[[package]]
+name = "deprecation-alias"
+version = "0.3.2"
+description = "A wrapper around 'deprecation' providing support for deprecated aliases."
+category = "main"
+optional = false
+python-versions = ">=3.6.1"
+files = [
+    {file = "deprecation-alias-0.3.2.tar.gz", hash = "sha256:1c9e1a5ddd0a276a1a18e7a4f9d56b53232217491c4549eaa45e51753013ce76"},
+    {file = "deprecation_alias-0.3.2-py3-none-any.whl", hash = "sha256:ed2e9dde582530e2a364cae4fa26077fda4adc9b28a44ce94a8ef0ee9271e312"},
+]
+
+[package.dependencies]
+deprecation = ">=2.1.0"
+packaging = ">=20.4"
 
 [[package]]
 name = "dist-meta"
@@ -516,6 +572,18 @@ python-versions = ">=3.7"
 files = [
     {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
     {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
+]
+
+[[package]]
+name = "mistletoe"
+version = "1.0.1"
+description = "A fast, extensible Markdown parser in pure Python."
+category = "main"
+optional = false
+python-versions = "~=3.5"
+files = [
+    {file = "mistletoe-1.0.1-py3-none-any.whl", hash = "sha256:c1e3d8a5a7fcd6354650977bb228d28f184f09a475456b8a1e122170038e2707"},
+    {file = "mistletoe-1.0.1.tar.gz", hash = "sha256:b1f89afb079a1b1a542e9ef2c08dd450a07a2bd935c03cab22c328ad7ca4d8e8"},
 ]
 
 [[package]]
@@ -1147,4 +1215,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "7e0be94b75b278ce57898b0ee39f628280268335200ac37ac09c3c81ece671c4"
+content-hash = "03a7fe0cf576b1c0cbd4e304d54c5fc8b8fef89abf29baaa1eae5298aa71b410"
