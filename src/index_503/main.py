@@ -82,7 +82,7 @@ def make_index(origin: str) -> Dict[str, List["WheelFile"]]:
 
         index_content = str(generate_index(projects.keys()))
         write_utf8_file(str(temp_dir_path.joinpath("index.html")), index_content)
-        project_base_url = URL(f"../../{origin}")
+        project_base_url = URL("../")
 
         for project_name, project_files in projects.items():
             project_dir = temp_dir_path.joinpath(canonicalize_name(project_name))
