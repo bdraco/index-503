@@ -69,7 +69,7 @@ def generate_project_page(
                 page(f"Links for {name}")
 
             for wheel_file in files:
-                wheel_file.as_anchor(page, "./")
+                wheel_file.as_anchor(page, "../")
                 page.br()
 
     return page
