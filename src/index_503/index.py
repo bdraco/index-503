@@ -8,7 +8,7 @@ from dataclasses import asdict
 from operator import attrgetter
 from pathlib import Path
 from shutil import copyfile, rmtree
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from dist_meta import distributions, metadata
 from natsort import natsorted
@@ -22,7 +22,7 @@ from .wheel_file import WheelFile
 _LOGGER = logging.getLogger(__name__)
 
 
-def make_index(origin_path: Path) -> Dict[str, List["WheelFile"]]:
+def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
     """Generate a simple repository of Python wheels.
 
     This function will take a directory of wheels at the top level
@@ -127,6 +127,4 @@ def make_index(origin_path: Path) -> Dict[str, List["WheelFile"]]:
         if old_index:
             rmtree(old_index)
 
-        print(f"Index generated at {target_path} with {len(projects)} projects.")
-
-        return projects
+        return target_path, projects
