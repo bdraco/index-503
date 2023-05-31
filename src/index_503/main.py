@@ -40,16 +40,6 @@ def load_json_file(filename: Path) -> Dict[str, Dict[str, Any]]:
         return json.loads(bytes)
 
 
-def replace_name(metadata_string: str, expected_name: str) -> str:
-    """Replace the name in the metadata string."""
-    metadata = metadata_string.splitlines()
-    for i, line in enumerate(metadata):
-        if line.startswith("Name:"):
-            metadata[i] = f"Name: {expected_name}"
-            break
-    return "\n".join(metadata)
-
-
 def make_index(origin: str) -> Dict[str, List["WheelFile"]]:
     """Generate a simple repository of Python wheels.
 
@@ -104,20 +94,18 @@ def make_index(origin: str) -> Dict[str, List["WheelFile"]]:
                     _LOGGER.warning(f"METADATA file not found in {wheel_path}")
                     continue
                 metadata_string = wd.read_file("METADATA")
-                # expected_name = wheel_file_name.split("-")[0].lower()
-                # Fixup the name in the metadata file
-                # metadata_string = replace_name(metadata_string, expected_name)
                 wheel_metadata = metadata.loads(metadata_string)
 
             metadata_filename.write_text(metadata_string)
+            project_name = wheel_metadata["Name"]
             wheel_file_obj = WheelFile(
-                name=wheel_metadata["Name"],
+                name=project_name,
                 filename=target_file.relative_to(temp_dir_path).as_posix(),
                 wheel_hash=get_sha256_hash(wheel_path),
                 requires_python=wheel_metadata.get("Requires-Python"),
                 metadata_hash=get_sha256_hash(metadata_filename),
             )
-            projects[wheel_file_obj.name].append(wheel_file_obj)
+            projects[project_name].append(wheel_file_obj)
             cache[wheel_file_obj.filename] = asdict(wheel_file_obj)
             os.symlink(f"../{origin_name}/{wheel_path.name}", target_file)
 
