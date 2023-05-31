@@ -1,13 +1,10 @@
 import re
-from pathlib import Path
 from typing import Iterable, Union
 
 from airium import Airium
-from bs4 import BeautifulSoup as soup
 from natsort import natsorted
 from yarl import URL
 
-from .file import write_utf8_file
 from .wheel_file import WheelFile
 
 
@@ -91,35 +88,3 @@ def get_meta_tags(page: Airium) -> None:
     page.meta(name="generator", content=f"index503 version {__version__}")
     page.meta(name="pypi:repository-version", content="1.0")
     page.meta(charset="UTF-8")
-
-
-_minify_re = re.compile(r"\n\s*")
-
-
-def _update_file(filename: Path, new_content: str) -> bool:
-    """
-    Write ``new_content`` to filename, but only if the content has changed.
-
-    Requires the ``incremental`` extra (``BeautifulSoup`` and ``html5lib``), otherwise always writes.
-
-    .. versionadded:: 0.2.0 (private)
-
-    :param filename:
-    :param new_content:
-
-    :returns: Whether the file was updated on disk.
-    """
-    if not filename.exists() or soup is None:
-        write_utf8_file(str(filename), new_content)
-        return True
-
-    current_soup = soup(
-        _minify_re.sub("", filename.read_text().strip()), "html.parser"
-    ).body
-    new_soup = soup(_minify_re.sub("", new_content.strip()), "html.parser").body
-
-    if current_soup != new_soup:
-        write_utf8_file(str(filename), new_content)
-        return True
-
-    return False
