@@ -47,7 +47,7 @@ def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
         cache = load_json_file(cache_file)
 
     with tempfile.TemporaryDirectory(
-        dir=target_path_parent, ignore_cleanup_errors=True
+        dir=str(target_path_parent), ignore_cleanup_errors=True
     ) as temp_dir:
         temp_dir_path = Path(temp_dir)
         all_wheel_files: set[str] = set()
