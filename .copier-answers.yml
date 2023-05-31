@@ -1,0 +1,19 @@
+# Changes here will be overwritten by Copier
+_commit: e096cc3
+_src_path: gh:browniebroke/pypackage-template
+add_me_as_contributor: true
+copyright_year: '2023'
+documentation: true
+email: nick@koston.org
+full_name: J. Nick Koston
+github_username: bdraco
+initial_commit: true
+open_source_license: MIT
+package_name: index_503
+project_name: Index 503
+project_short_description: PEP 503 index builder
+project_slug: index-503
+run_poetry_install: true
+setup_github: true
+setup_pre_commit: true
+
