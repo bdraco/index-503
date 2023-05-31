@@ -5,6 +5,8 @@ from airium import Airium
 from natsort import natsorted
 from yarl import URL
 
+from .wheel_file import WheelFile
+
 
 # modified from https://github.com/repo-helper/simple503/blob/master/simple503/__init__.py
 def generate_index(projects: Iterable[str], base_url: Union[str, URL] = "/") -> Airium:
@@ -36,6 +38,41 @@ def generate_index(projects: Iterable[str], base_url: Union[str, URL] = "/") -> 
                 index.br()
 
     return index
+
+
+def generate_project_page(
+    name: str, files: Iterable[WheelFile], base_url: Union[str, URL] = "/"
+) -> Airium:
+    """
+    Generate the repository page for a project.
+
+    :param name: The project name, e.g. ``domdf-python-tools``.
+    :param files: An iterable of files for the project, which will be linked to from the index page.
+    :param base_url: The base URL of the Python package repository.
+        For example, with PyPI's URL, a URL of /foo/ would be https://pypi.org/simple/foo/.
+    """
+
+    name = canonicalize_name(name)
+    base_url = URL(base_url)
+    page = Airium()
+
+    page("<!DOCTYPE html>")
+    with page.html(lang="en"):
+        with page.head():
+            get_meta_tags(page)
+            with page.title():
+                page(f"Links for {name}")
+
+        with page.body():
+            with page.h1():
+                # Not part of the spec, but allowed
+                page(f"Links for {name}")
+
+            for wheel_file in files:
+                wheel_file.as_anchor(page, base_url)
+                page.br()
+
+    return page
 
 
 _canonicalize_regex = re.compile(r"[-_.]+")
