@@ -95,6 +95,7 @@ def make_index(origin: str) -> Dict[str, List["WheelFile"]]:
                     continue
                 metadata_string = wd.read_file("METADATA")
                 wheel_metadata = metadata.loads(metadata_string)
+                wheel_metadata["Name"] = canonicalize_name(wheel_metadata["Name"])
 
             metadata_filename.write_text(metadata_string)
             wheel_file_obj = WheelFile(
