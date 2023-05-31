@@ -12,16 +12,14 @@ from .wheel_file import WheelFile
 
 
 # modified from https://github.com/repo-helper/simple503/blob/master/simple503/__init__.py
-def generate_index(projects: Iterable[str], base_url: Union[str, URL] = "/") -> Airium:
+def generate_index(projects: Iterable[str]) -> Airium:
     """
     Generate the simple repository index page, containing a list of all projects.
 
     :param projects: The list of projects to generate links for.
-    :param base_url: The base URL of the Python package repository.
-        For example, with PyPI's URL, a URL of /foo/ would be https://pypi.org/simple/foo/.
     """
 
-    base_url = URL(base_url)
+    base_url = URL("./")
     index = Airium()
 
     index("<!DOCTYPE html>")
@@ -56,7 +54,6 @@ def generate_project_page(
     """
 
     name = canonicalize_name(name)
-    base_url = URL(base_url)
     page = Airium()
 
     page("<!DOCTYPE html>")
@@ -72,7 +69,7 @@ def generate_project_page(
                 page(f"Links for {name}")
 
             for wheel_file in files:
-                wheel_file.as_anchor(page, base_url)
+                wheel_file.as_anchor(page, "./")
                 page.br()
 
     return page
