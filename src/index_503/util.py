@@ -1,10 +1,7 @@
 import json
-import logging
 from hashlib import sha256
 from pathlib import Path
 from typing import Any, Dict
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_sha256_hash(filename: Path) -> str:

@@ -1,12 +1,9 @@
-import logging
 from pathlib import Path
 
 import click
 from consolekit import click_command
 
 from .index import make_index
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @click.argument("origin", type=click.STRING)
