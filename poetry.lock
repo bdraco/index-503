@@ -278,6 +278,23 @@ tomli = {version = "*", optional = true, markers = "python_full_version <= \"3.1
 toml = ["tomli"]
 
 [[package]]
+name = "dist-meta"
+version = "0.8.0"
+description = "Parse and create Python distribution metadata."
+category = "main"
+optional = false
+python-versions = ">=3.6.1"
+files = [
+    {file = "dist-meta-0.8.0.tar.gz", hash = "sha256:541d51f75b7f580c80d8d7b23112d0b4bf3edbc9442e425a7c4fcd75f4138551"},
+    {file = "dist_meta-0.8.0-py3-none-any.whl", hash = "sha256:a01eba9a9a0737e8293d3a7f6750fb7395fc47e96bec59a918912535347360ad"},
+]
+
+[package.dependencies]
+domdf-python-tools = ">=3.1.0"
+handy-archives = ">=0.1.0"
+packaging = ">=20.9"
+
+[[package]]
 name = "docutils"
 version = "0.18.1"
 description = "Docutils -- Python Documentation Utilities"
@@ -288,6 +305,27 @@ files = [
     {file = "docutils-0.18.1-py2.py3-none-any.whl", hash = "sha256:23010f129180089fbcd3bc08cfefccb3b890b0050e1ca00c867036e9d161b98c"},
     {file = "docutils-0.18.1.tar.gz", hash = "sha256:679987caf361a7539d76e584cbeddc311e3aee937877c87346f31debc63e9d06"},
 ]
+
+[[package]]
+name = "domdf-python-tools"
+version = "3.6.1"
+description = "Helpful functions for Python 🐍 🛠️"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "domdf_python_tools-3.6.1-py3-none-any.whl", hash = "sha256:e18158460850957f18e740eb94ede56f580ddb0cb162ab9d9834ed8bbb1b6431"},
+    {file = "domdf_python_tools-3.6.1.tar.gz", hash = "sha256:acc04563d23bce4d437dd08af6b9bea788328c412772a044d8ca428a7ad861be"},
+]
+
+[package.dependencies]
+importlib-metadata = {version = ">=3.6.0", markers = "python_version < \"3.9\""}
+natsort = ">=7.0.1"
+typing-extensions = ">=3.7.4.1"
+
+[package.extras]
+all = ["pytz (>=2019.1)"]
+dates = ["pytz (>=2019.1)"]
 
 [[package]]
 name = "exceptiongroup"
@@ -303,6 +341,22 @@ files = [
 
 [package.extras]
 test = ["pytest (>=6)"]
+
+[[package]]
+name = "handy-archives"
+version = "0.1.4"
+description = "Some handy archive helpers for Python."
+category = "main"
+optional = false
+python-versions = ">=3.6.1"
+files = [
+    {file = "handy-archives-0.1.4.tar.gz", hash = "sha256:c951e9a3370ce678591c797457240dbf86b77923f8c8a61a60bdb7f6c52c9110"},
+    {file = "handy_archives-0.1.4-py3-none-any.whl", hash = "sha256:0c5db273e338a197e7cb00cf4f652d2c06c7a545751a791a0f33a584f2c3eaef"},
+]
+
+[package.extras]
+all = ["coincidence (>=0.2.0)", "pytest (>=6.0.0)"]
+testing = ["coincidence (>=0.2.0)", "pytest (>=6.0.0)"]
 
 [[package]]
 name = "idna"
@@ -629,7 +683,7 @@ icu = ["PyICU (>=1.0.0)"]
 name = "packaging"
 version = "23.1"
 description = "Core utilities for Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1138,4 +1192,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "6db78eb17aada4ebf0a892983eb46e935e196dba154af400fe87dcd5add37ba5"
+content-hash = "db8c1dd5c75dbb71ea2a7f7a251664fd959ae4fe005f512ac8940e437c0dde01"

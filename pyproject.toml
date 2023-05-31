@@ -29,6 +29,7 @@ airium = "^0.2.5"
 yarl = "^1.9.2"
 natsort = "^8.3.1"
 bs4 = "^0.0.1"
+dist-meta = "^0.8.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0"
