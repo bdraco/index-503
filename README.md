@@ -32,6 +32,14 @@
 
 PEP 503 index builder
 
+## Usage
+
+If you have a directory full of wheels like `musllinux`:
+
+`index-503 musllinux`
+
+This will produce a `musllinux-index` directory with a PEP 503 index symlinked to the original directory without disturbing the original directory.
+
 ## Installation
 
 Install this via pip (or your favourite package manager):
