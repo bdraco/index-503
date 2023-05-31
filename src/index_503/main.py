@@ -10,6 +10,7 @@ from typing import Dict, List
 
 from dist_meta import distributions, metadata
 from natsort import natsorted
+from yarl import URL
 
 from .file import write_utf8_file
 from .page_generator import canonicalize_name, generate_index, generate_project_page
@@ -81,6 +82,7 @@ def make_index(origin: str) -> Dict[str, List["WheelFile"]]:
 
         index_content = str(generate_index(projects.keys()))
         write_utf8_file(str(temp_dir_path.joinpath("index.html")), index_content)
+        project_base_url = URL(f"../../{origin}")
 
         for project_name, project_files in projects.items():
             project_dir = temp_dir_path.joinpath(canonicalize_name(project_name))
@@ -88,6 +90,7 @@ def make_index(origin: str) -> Dict[str, List["WheelFile"]]:
             project_index = generate_project_page(
                 project_name,
                 natsorted(project_files, key=attrgetter("filename"), reverse=True),
+                project_base_url,
             )
 
             write_utf8_file(str(project_dir.joinpath("index.html")), str(project_index))
