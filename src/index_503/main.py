@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def main_cli() -> None:
-    make_index("musllinux")
+    make_index("/Users/bdraco/TEST_WHEELS/wheels.home-assistant.io/musllinux")
 
 
 def get_sha256_hash(filename: Path) -> str:
