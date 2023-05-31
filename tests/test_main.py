@@ -1,5 +1,5 @@
-from index_503.main import add
+from index_503.main import main_cli
 
 
-def test_add():
-    assert add(1, 1) == 2
+def test_main_cli():
+    assert main_cli is not None
