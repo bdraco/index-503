@@ -40,6 +40,10 @@ If you have a directory full of wheels like `musllinux`:
 
 This will produce a `musllinux-index` directory with a PEP 503 index symlinked to the original directory without disturbing the original directory.
 
+Running this again will replace the original index and delete the old index in an atomic manner.
+
+The caller is responsible for ensuring that there are no simultaneous executions.
+
 ## Installation
 
 Install this via pip (or your favourite package manager):
