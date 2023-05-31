@@ -21,17 +21,17 @@
 #  OR OTHER DEALINGS IN THE SOFTWARE.
 #
 import posixpath
+from dataclasses import dataclass
 from html import escape
-from typing import NamedTuple, Optional, Union
+from typing import Optional, Union
 
 from airium import Airium
 from typing_extensions import Literal
 from yarl import URL
 
-# 3rd party
 
-
-class WheelFile(NamedTuple):
+@dataclass
+class WheelFile:
     """
     Represents a wheel file in the repository.
     """
