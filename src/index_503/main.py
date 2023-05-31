@@ -8,7 +8,7 @@ from dataclasses import asdict
 from hashlib import sha256
 from operator import attrgetter
 from pathlib import Path
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from typing import Any, Dict, List
 
 from dist_meta import distributions, metadata
@@ -67,12 +67,10 @@ def make_index(origin: str) -> Dict[str, List["WheelFile"]]:
     with tempfile.TemporaryDirectory(
         dir=target_path_parent, ignore_cleanup_errors=True
     ) as temp_dir:
-        print(f"temp_Dir={temp_dir}")
         temp_dir_path = Path(temp_dir)
         all_wheel_files: set[str] = set()
 
         for wheel_file in glob.glob(f"{origin}/*.whl"):
-            print(f"wheel_file={wheel_file}")
             wheel_path = Path(wheel_file)
             wheel_file_name = wheel_path.name
             all_wheel_files.add
@@ -144,6 +142,8 @@ def make_index(origin: str) -> Dict[str, List["WheelFile"]]:
         os.replace(final_build_name, target_path)
 
         if old_index:
-            os.remove(old_index)
+            rmtree(old_index)
+
+        print(f"Index generated at {target_path} with {len(projects)} projects.")
 
         return projects
