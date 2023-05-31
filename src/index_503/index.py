@@ -37,7 +37,7 @@ def make_index(origin_path: Path) -> Dict[str, List["WheelFile"]]:
     musllinux-index
     """
     origin_name = origin_path.name
-    target_path = origin_path.with_suffix("-index")
+    target_path = origin_path.parent / (origin_path.name + "-index")
     old_index = target_path.readlink() if target_path.exists() else None
     target_path_parent = target_path.parent
     projects: Dict[str, List[WheelFile]] = defaultdict(list)
@@ -110,8 +110,8 @@ def make_index(origin_path: Path) -> Dict[str, List["WheelFile"]]:
 
             write_utf8_file(project_dir.joinpath("index.html"), str(project_index))
 
-        final_name = origin_path.with_suffix(f"-index-{temp_dir_path.name}")
-        final_build_name = origin_path.with_suffix(f"-index-{temp_dir_path.name}-build")
+        final_name = target_path.parent / (target_path.name + "-" + temp_dir_path.name)
+        final_build_name = final_name.parent / (final_name.name + "-build")
 
         # Rename the new index to the final name
         os.rename(temp_dir, final_name)
