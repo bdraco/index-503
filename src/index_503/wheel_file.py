@@ -21,7 +21,6 @@
 #  OR OTHER DEALINGS IN THE SOFTWARE.
 #
 import posixpath
-from hashlib import _Hash
 from html import escape
 from typing import NamedTuple, Optional, Union
 
@@ -40,7 +39,7 @@ class WheelFile(NamedTuple):
     #: The name of the wheel file.
     filename: str
 
-    wheel_hash: "_Hash"
+    wheel_hash: str  # sha256
     """
     The hash of the wheel file.
 
@@ -57,7 +56,7 @@ class WheelFile(NamedTuple):
     :py:obj:`None` if undefined.
     """
 
-    metadata_hash: Union["_Hash", Literal[True], None] = None
+    metadata_hash: Union[str, Literal[True], None] = None
     """
     The hash of the wheel's METADATA file.
 
@@ -75,7 +74,7 @@ class WheelFile(NamedTuple):
 
         base_url = URL(base_url)
 
-        href = f"{base_url / self.filename}#{self.wheel_hash.name.lower()}={self.wheel_hash.hexdigest()}"
+        href = f"{base_url / self.filename}#sha256={self.wheel_hash}"
         kwargs = {"href": href}
 
         if self.requires_python is not None:
@@ -84,9 +83,7 @@ class WheelFile(NamedTuple):
         if self.metadata_hash is True:
             kwargs["data-dist-info-metadata"] = "true"
         elif self.metadata_hash is not None:
-            hash_string = (
-                f"{self.metadata_hash.name.lower()}={self.metadata_hash.hexdigest()}"
-            )
+            hash_string = f"sha256={self.metadata_hash}"
             kwargs["data-dist-info-metadata"] = hash_string
 
         with page.a(**kwargs):
