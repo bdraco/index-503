@@ -104,9 +104,9 @@ def make_index(origin: str) -> Dict[str, List["WheelFile"]]:
                     _LOGGER.warning(f"METADATA file not found in {wheel_path}")
                     continue
                 metadata_string = wd.read_file("METADATA")
-                expected_name = wheel_file_name.split("-")[0].lower()
+                # expected_name = wheel_file_name.split("-")[0].lower()
                 # Fixup the name in the metadata file
-                metadata_string = replace_name(metadata_string, expected_name)
+                # metadata_string = replace_name(metadata_string, expected_name)
                 wheel_metadata = metadata.loads(metadata_string)
 
             metadata_filename.write_text(metadata_string)
