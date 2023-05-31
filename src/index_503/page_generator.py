@@ -29,9 +29,7 @@ def generate_index(projects: Iterable[str]) -> Airium:
 
         with index.body():
             for project_name in natsorted(projects, key=str.lower):
-                normalized_name = canonicalize_name(project_name)
-
-                with index.a(href=f"{base_url / normalized_name}/"):
+                with index.a(href=f"{base_url / project_name}/"):
                     index(project_name)
                 index.br()
 
@@ -50,7 +48,6 @@ def generate_project_page(
         For example, with PyPI's URL, a URL of /foo/ would be https://pypi.org/simple/foo/.
     """
 
-    name = canonicalize_name(name)
     page = Airium()
 
     page("<!DOCTYPE html>")
