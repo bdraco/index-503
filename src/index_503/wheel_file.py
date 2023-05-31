@@ -37,6 +37,8 @@ class WheelFile:
     """
 
     #: The name of the wheel file.
+    name: str
+
     filename: str
 
     wheel_hash: str  # sha256
