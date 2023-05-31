@@ -20,6 +20,16 @@
 #  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 #  OR OTHER DEALINGS IN THE SOFTWARE.
 #
+import posixpath
+from hashlib import _Hash
+from html import escape
+from typing import NamedTuple, Optional, Union
+
+from airium import Airium
+from typing_extensions import Literal
+from yarl import URL
+
+# 3rd party
 
 
 class WheelFile(NamedTuple):
@@ -32,28 +42,28 @@ class WheelFile(NamedTuple):
 
     wheel_hash: "_Hash"
     """
-	The hash of the wheel file.
+    The hash of the wheel file.
 
-	Repositories SHOULD choose a hash function from one of the ones guaranteed
-	to be available via the hashlib module in the Python standard library
-	(currently ``md5``, ``sha1``, ``sha224``, ``sha256``, ``sha384``, ``sha512``).
-	The current recommendation is to use ``sha256``.
-	"""
+    Repositories SHOULD choose a hash function from one of the ones guaranteed
+    to be available via the hashlib module in the Python standard library
+    (currently ``md5``, ``sha1``, ``sha224``, ``sha256``, ``sha384``, ``sha512``).
+    The current recommendation is to use ``sha256``.
+    """
 
     requires_python: Optional[str] = None
     """
-	The ``Requires-Python`` attribute from the wheel's ``METADATA`` file.
+    The ``Requires-Python`` attribute from the wheel's ``METADATA`` file.
 
-	:py:obj:`None` if undefined.
-	"""
+    :py:obj:`None` if undefined.
+    """
 
     metadata_hash: Union["_Hash", Literal[True], None] = None
     """
-	The hash of the wheel's METADATA file.
+    The hash of the wheel's METADATA file.
 
-	:py:obj:`None` if the metadata file is not exposed.
-	May be :py:obj:`True` if no hash is available.
-	"""
+    :py:obj:`None` if the metadata file is not exposed.
+    May be :py:obj:`True` if no hash is available.
+    """
 
     def as_anchor(self, page: Airium, base_url: Union[str, URL] = "/") -> None:
         """
