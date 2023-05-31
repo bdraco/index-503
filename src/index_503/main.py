@@ -40,6 +40,16 @@ def load_json_file(filename: Path) -> Dict[str, Dict[str, Any]]:
         return json.loads(bytes)
 
 
+def replace_name(metadata_string: str, expected_name: str) -> str:
+    """Replace the name in the metadata string."""
+    metadata = metadata_string.splitlines()
+    for i, line in enumerate(metadata):
+        if line.startswith("Name:"):
+            metadata[i] = f"Name: {expected_name}"
+            break
+    return "\n".join(metadata)
+
+
 def make_index(origin: str) -> Dict[str, List["WheelFile"]]:
     """Generate a simple repository of Python wheels.
 
@@ -94,8 +104,10 @@ def make_index(origin: str) -> Dict[str, List["WheelFile"]]:
                     _LOGGER.warning(f"METADATA file not found in {wheel_path}")
                     continue
                 metadata_string = wd.read_file("METADATA")
+                expected_name = wheel_file_name.split("-")[0].lower()
+                # Fixup the name in the metadata file
+                metadata_string = replace_name(metadata_string, expected_name)
                 wheel_metadata = metadata.loads(metadata_string)
-                wheel_metadata["Name"] = canonicalize_name(wheel_metadata["Name"])
 
             metadata_filename.write_text(metadata_string)
             wheel_file_obj = WheelFile(
