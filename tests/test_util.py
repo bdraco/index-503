@@ -24,7 +24,7 @@ def test_exclusive_lock(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> Non
         def run(self):
             with exclusive_lock(tmp_path):
                 assert thread_lock.acquire(False) is True
-                sleep(0.05)
+                sleep(0.1)
                 thread_lock.release()
 
     thread_1 = LockedRunner()
