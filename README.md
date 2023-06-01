@@ -42,7 +42,7 @@ This will produce a `musllinux-index` directory with a PEP 503 index symlinked t
 
 Running this again will replace the original index and delete the old index in an atomic manner.
 
-The caller is responsible for ensuring that there are no simultaneous executions.
+A lock will be held in the parent directory to prevent concurrent executions.
 
 ## Installation
 

@@ -37,7 +37,7 @@ def load_json_file(filename: Path) -> Dict[str, Dict[str, Any]]:
 def exclusive_lock(origin_path: Path) -> Generator[None, None, None]:
     parent = origin_path.parent
     lock_file = parent / (origin_path.name + ".index_503.lock")
-    with lock_file.open("r") as fh:
+    with lock_file.open("a") as fh:
         try:
             fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
             yield
@@ -46,4 +46,5 @@ def exclusive_lock(origin_path: Path) -> Generator[None, None, None]:
             # Another instance is running, wait for it to finish
             _LOGGER.warning("Another instance is running, waiting")
         fcntl.flock(fh, fcntl.LOCK_EX)
+        _LOGGER.warning("Another instance finished, continuing")
         yield
