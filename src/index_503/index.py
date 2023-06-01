@@ -3,7 +3,6 @@ import logging
 import os
 import tempfile
 from collections import defaultdict
-from dataclasses import asdict
 from operator import attrgetter
 from pathlib import Path
 from shutil import copyfile, rmtree
@@ -16,7 +15,7 @@ from .cache import IndexCache
 from .file import write_utf8_file
 from .metadata import repair_metadata_file
 from .page_generator import generate_index, generate_project_page
-from .util import canonicalize_name, exclusive_lock, get_sha256_hash
+from .util import canonicalize_name, exclusive_lock
 from .wheel_file import WheelFile
 
 _LOGGER = logging.getLogger(__name__)
@@ -112,7 +111,7 @@ class IndexMaker:
             elif wheel_file_obj := WheelFile.from_wheel(wheel_path, metadata_path):
                 wheel_file_name_to_metadata_path[wheel_file_name] = metadata_path
                 new_wheel_file_objects.append(wheel_file_obj)
-                raw_cache[wheel_file_name] = asdict(wheel_file_obj)
+                raw_cache[wheel_file_name] = wheel_file_obj.as_dict()
             else:
                 continue
 
@@ -139,13 +138,14 @@ class IndexMaker:
     ) -> None:
         """Repair the metadata files."""
         # Now fix all the metadata files and update the sha256 hash + cache
+        raw_cache = self.cache.cache
         for wheel_file_obj in new_wheel_file_objects:
             wheel_file_name = wheel_file_obj.filename
             metadata_path = wheel_file_name_to_metadata_path[wheel_file_name]
 
             if repair_metadata_file(metadata_path, canonical_name_to_metadata_name):
-                wheel_file_obj.metadata_hash = get_sha256_hash(metadata_path)
-                self.cache.cache[wheel_file_name] = asdict(wheel_file_obj)
+                wheel_file_obj.update_metadata(metadata_path)
+                raw_cache[wheel_file_name] = wheel_file_obj.as_dict()
 
     def generate_index_pages(
         self, temp_dir_path: Path, projects: Dict[str, List[WheelFile]]
