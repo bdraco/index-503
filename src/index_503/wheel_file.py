@@ -29,7 +29,7 @@ from airium import Airium
 from typing_extensions import Literal
 from yarl import URL
 
-WHEEL_FILE_VERSION = 7
+WHEEL_FILE_VERSION = 8
 
 
 @dataclass
