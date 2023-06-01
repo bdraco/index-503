@@ -29,7 +29,7 @@ from airium import Airium
 from typing_extensions import Literal
 from yarl import URL
 
-WHEEL_FILE_VERSION = 2
+WHEEL_FILE_VERSION = 7
 
 
 @dataclass
@@ -90,12 +90,10 @@ class WheelFile:
 
         if self.requires_python is not None:
             kwargs["data-requires-python"] = escape(self.requires_python)
-
         if self.metadata_hash is True:
             kwargs["data-dist-info-metadata"] = "true"
         elif self.metadata_hash is not None:
-            hash_string = f"sha256={self.metadata_hash}"
-            kwargs["data-dist-info-metadata"] = hash_string
+            kwargs["data-dist-info-metadata"] = f"sha256={self.metadata_hash}"
 
         with page.a(**kwargs):
             page(posixpath.basename(self.filename))
