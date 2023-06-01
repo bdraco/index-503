@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.6 (2023-06-01)
+### Fix
+
+* Repair should always update the original_name to the metadata_name ([#7](https://github.com/bdraco/index-503/issues/7)) ([`a491882`](https://github.com/bdraco/index-503/commit/a491882da721232efdb2b8d1a66dec44ba03433c))
+
 ## v0.1.5 (2023-06-01)
 ### Fix
 
