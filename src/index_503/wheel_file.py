@@ -24,7 +24,7 @@ import posixpath
 from dataclasses import dataclass
 from html import escape
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from airium import Airium
 from dist_meta import metadata
@@ -102,6 +102,13 @@ class WheelFile:
 
         with page.a(**kwargs):
             page(posixpath.basename(self.filename))
+
+    @classmethod
+    def from_cache(cls, cache_data: dict[str, Any]) -> Optional["WheelFile"]:
+        """Create a :class:`~.WheelFile` from a cache entry."""
+        if cache_data["version"] != WHEEL_FILE_VERSION:
+            return None
+        return cls(**cache_data)
 
     @classmethod
     def from_wheel(

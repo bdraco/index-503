@@ -17,7 +17,7 @@ from .file import write_utf8_file
 from .metadata import repair_metadata_file
 from .page_generator import generate_index, generate_project_page
 from .util import canonicalize_name, exclusive_lock, get_sha256_hash
-from .wheel_file import WHEEL_FILE_VERSION, WheelFile
+from .wheel_file import WheelFile
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +95,7 @@ class IndexMaker:
         wheel_file_name_to_metadata_path: Dict[str, Path] = {}
         all_wheel_files: Set[str] = set()
         canonical_name_to_metadata_name: Dict[str, str] = {}
+        raw_cache = self.cache.cache
 
         for wheel_file in glob.glob(str(self.origin_path.joinpath("*.whl"))):
             wheel_path = Path(wheel_file)
@@ -103,19 +104,17 @@ class IndexMaker:
             target_file = temp_dir_path.joinpath(wheel_file_name)
             metadata_path = target_file.with_suffix(f"{target_file.suffix}.metadata")
             wheel_file_symlink_target = f"../{self.origin_name}/{wheel_file_name}"
-            wheel_cache = self.cache.cache.get(wheel_file_name)
 
-            if wheel_cache and wheel_cache["version"] == WHEEL_FILE_VERSION:
-                wheel_file_obj = WheelFile(**wheel_cache)
+            if (wheel_cache := raw_cache.get(wheel_file_name)) and (
+                wheel_file_obj := WheelFile.from_cache(wheel_cache)
+            ):
                 copyfile(self.target_path.joinpath(metadata_path.name), metadata_path)
-            else:
-                maybe_wheel_file_obj = WheelFile.from_wheel(wheel_path, metadata_path)
-                if not maybe_wheel_file_obj:
-                    continue
-                wheel_file_obj = maybe_wheel_file_obj
+            elif wheel_file_obj := WheelFile.from_wheel(wheel_path, metadata_path):
                 wheel_file_name_to_metadata_path[wheel_file_name] = metadata_path
                 new_wheel_file_objects.append(wheel_file_obj)
-                self.cache.cache[wheel_file_name] = asdict(wheel_file_obj)
+                raw_cache[wheel_file_name] = asdict(wheel_file_obj)
+            else:
+                continue
 
             canonical_name = wheel_file_obj.canonical_name
             metadata_name = wheel_file_obj.metadata_name
