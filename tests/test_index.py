@@ -32,7 +32,11 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
         assert origin_path_index.joinpath(
             "CO2Signal-0.4.2-py3-none-any.whl.metadata"
         ).exists()
-        assert origin_path_index.joinpath("index.html").exists()
+        project_index_path = origin_path_index.joinpath("index.html")
+        assert project_index_path.exists()
+        project_index_html = project_index_path.read_text()
+        assert "CO2Signal" in project_index_html
+        assert "/co2signal/" in project_index_html
         assert origin_path_index.joinpath("CO2Signal").exists()
         co2signal_index_path = origin_path_index.joinpath("CO2Signal", "index.html")
         assert co2signal_index_path.exists()
