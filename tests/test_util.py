@@ -33,11 +33,9 @@ def test_exclusive_lock(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> Non
     thread_1.start()
     thread_2.start()
     thread_3.start()
-
-    assert "Another instance is running" in caplog.text
-
     thread_1.join()
     thread_2.join()
     thread_3.join()
 
+    assert "Another instance is running" in caplog.text
     assert "Another instance finished, continuing" in caplog.text
