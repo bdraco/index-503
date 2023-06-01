@@ -21,8 +21,6 @@ from .wheel_file import WHEEL_FILE_VERSION, WheelFile
 
 _LOGGER = logging.getLogger(__name__)
 
-CACHE_FILE = "cache.json"
-
 
 def make_index(origin_path: Path) -> Path:
     """Generate a simple repository of Python wheels.
