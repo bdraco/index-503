@@ -1,11 +1,11 @@
 import glob
 import logging
 import os
-import tempfile
 from collections import defaultdict
 from operator import attrgetter
 from pathlib import Path
 from shutil import copyfile, rmtree
+from tempfile import mkdtemp
 from typing import Dict, List, Set
 
 from natsort import natsorted
@@ -54,10 +54,8 @@ class IndexMaker:
         """Generate a simple repository of Python wheels."""
         target_path = self.target_path
         old_index = target_path.readlink() if target_path.exists() else None
-
-        with tempfile.TemporaryDirectory(
-            dir=str(self.target_path.parent), ignore_cleanup_errors=True
-        ) as temp_dir:
+        temp_dir = mkdtemp(None, None, str(self.target_path.parent))
+        try:
             self.cache.load()
             temp_dir_path = Path(temp_dir)
 
@@ -69,6 +67,10 @@ class IndexMaker:
                 rmtree(old_index)
 
             return self.target_path
+        except Exception:
+            _LOGGER.exception("Error generating index")
+            rmtree(temp_dir)
+            raise
 
     def _atomic_replace_old_index(self, temp_dir_path: Path, target_path: Path) -> None:
         """Atomically replace the old index with the new one."""
