@@ -8,63 +8,21 @@ from dataclasses import asdict
 from operator import attrgetter
 from pathlib import Path
 from shutil import copyfile, rmtree
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
-from dist_meta import distributions, metadata
+from dist_meta import metadata
 from natsort import natsorted
 from yarl import URL
 
 from .file import write_utf8_file
-from .page_generator import canonicalize_name, generate_index, generate_project_page
-from .util import get_sha256_hash, load_json_file
+from .metadata import extract_metadata_from_wheel_file, repair_metadata_file
+from .page_generator import generate_index, generate_project_page
+from .util import canonicalize_name, get_sha256_hash, load_json_file
 from .wheel_file import WHEEL_FILE_VERSION, WheelFile
 
 _LOGGER = logging.getLogger(__name__)
 
 CACHE_FILE = "cache.json"
-
-
-def repair_metadata_file(
-    metadata_file: Path, canonical_name_to_metadata_name: Dict[str, str]
-) -> bool:
-    """Repair the metadata file."""
-    metadata_file_content = metadata_file.read_text().splitlines()
-    # We have to parse the metadata file manually because the dist_meta library
-    # doesn't support every version of the METADATA file.
-    modified = False
-
-    for index, line in enumerate(metadata_file_content):
-        if line.startswith("Requires-Dist: "):
-            items = line.split(" ")
-            original_name = items[1]
-            canonical_name = canonicalize_name(original_name)
-            metadata_name = canonical_name_to_metadata_name.get(canonical_name)
-            if metadata_name and metadata_name != original_name:
-                _LOGGER.warning(
-                    "Repairing %s Requires-Dist %s -> %s",
-                    metadata_file,
-                    original_name,
-                    metadata_name,
-                )
-                items[1] = metadata_name
-                metadata_file_content[index] = " ".join(items)
-                modified = True
-        if line == "":
-            break
-
-    if modified:
-        metadata_file.write_text("\n".join(metadata_file_content))
-
-    return modified
-
-
-def extract_metadata_from_wheel_file(wheel_path: Path) -> Optional[str]:
-    """Extract the METADATA file from a wheel file."""
-    with distributions.WheelDistribution.from_path(wheel_path) as wd:
-        if not wd.has_file("METADATA"):  # pragma: no cover
-            _LOGGER.warning(f"METADATA file not found in {wheel_path}")
-            return None
-        return wd.read_file("METADATA")
 
 
 def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
