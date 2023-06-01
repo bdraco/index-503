@@ -9,6 +9,7 @@ _canonicalize_regex = re.compile(r"[-_.]+")
 
 
 def canonicalize_name(name: str) -> str:
+    """Canonicalize a name."""
     # This is taken from PEP 503.
     return _canonicalize_regex.sub("-", name).lower()
 
