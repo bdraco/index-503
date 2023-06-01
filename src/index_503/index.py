@@ -91,9 +91,10 @@ def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
                 f"{target_file.suffix}.metadata"
             )
             wheel_file_symlink_target = f"../{origin_name}/{wheel_path.name}"
+            wheel_cache = cache.get(wheel_file_name)
 
-            if wheel_file_name in cache and cache["version"] == WHEEL_FILE_VERSION:
-                wheel_file_obj = WheelFile(**cache[wheel_file_name])
+            if wheel_cache and wheel_cache["version"] == WHEEL_FILE_VERSION:
+                wheel_file_obj = WheelFile(**wheel_cache)
                 projects[wheel_file_obj.metadata_name].append(wheel_file_obj)
                 previous_metadata_filename = target_path.joinpath(
                     metadata_filename.name
