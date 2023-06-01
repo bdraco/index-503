@@ -37,9 +37,9 @@ def repair_metadata_file(
             items = line.split(" ")
             canonical_name = items[1]
             metadata_name = canonical_name_to_metadata_name.get(canonical_name)
-            if metadata_name:
+            if metadata_name and metadata_name != canonical_name:
                 _LOGGER.warning(
-                    f"Repairing {metadata_file} {canonical_name} -> {metadata_name}"
+                    f"Repairing {metadata_file} Requires-Dist {canonical_name} -> {metadata_name}"
                 )
                 items[1] = metadata_name
                 metadata_file_content[index] = " ".join(items)
