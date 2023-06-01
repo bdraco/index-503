@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.3 (2023-06-01)
+### Fix
+
+* Rebuild hash if metadata is updated ([#3](https://github.com/bdraco/index-503/issues/3)) ([`915d65b`](https://github.com/bdraco/index-503/commit/915d65bc821de15b055f7aad2326c781cbd633b4))
+
 ## v0.1.2 (2023-06-01)
 ### Fix
 
