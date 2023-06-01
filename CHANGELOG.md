@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.1 (2023-06-01)
+### Fix
+
+* Cleanup cache side effects ([#22](https://github.com/bdraco/index-503/issues/22)) ([`9f1e7d1`](https://github.com/bdraco/index-503/commit/9f1e7d1af5c5d52884080e5e565d7d605e6bd7fb))
+
 ## v0.2.0 (2023-06-01)
 ### Feature
 
