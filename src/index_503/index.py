@@ -39,20 +39,67 @@ def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
     This will generate
     musllinux-index
     """
-    origin_name = origin_path.name
-    target_path = origin_path.parent / (origin_path.name + "-index")
-    old_index = target_path.readlink() if target_path.exists() else None
-    target_path_parent = target_path.parent
-    projects: Dict[str, List[WheelFile]] = defaultdict(list)
-    cache_file = target_path.joinpath(CACHE_FILE)
-    cache: Dict[str, Dict[str, Any]] = {}
-    if cache_file.exists():
-        cache = load_json_file(cache_file)
+    return IndexMaker(origin_path).make_index()
 
-    with tempfile.TemporaryDirectory(
-        dir=str(target_path_parent), ignore_cleanup_errors=True
-    ) as temp_dir:
-        temp_dir_path = Path(temp_dir)
+
+class IndexMaker:
+    """Generate a simple repository of Python wheels."""
+
+    def __init__(self, origin_path: Path) -> None:
+        """Generate a simple repository of Python wheels."""
+        self.origin_path = origin_path
+        self.origin_name = origin_path.name
+        target_path = origin_path.parent / (origin_path.name + "-index")
+        self.target_path = target_path
+        self.old_index = target_path.readlink() if target_path.exists() else None
+        self.target_path_parent = target_path.parent
+        self.projects: Dict[str, List[WheelFile]] = defaultdict(list)
+        cache_file = target_path.joinpath(CACHE_FILE)
+        self.cache: Dict[str, Dict[str, Any]] = {}
+        if cache_file.exists():
+            self.cache = load_json_file(cache_file)
+
+    def make_index(self) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
+        """Generate a simple repository of Python wheels."""
+        old_index = self.old_index
+        target_path = self.target_path
+
+        with tempfile.TemporaryDirectory(
+            dir=str(self.target_path_parent), ignore_cleanup_errors=True
+        ) as temp_dir:
+            temp_dir_path = Path(temp_dir)
+
+            self._make_index_at_temp_dir(temp_dir_path)
+            self._atomic_replace_old_index(temp_dir_path)
+
+            if old_index:
+                rmtree(old_index)
+
+            return target_path, self.projects
+
+    def _atomic_replace_old_index(self, temp_dir_path: Path) -> None:
+        """Atomically replace the old index with the new one."""
+        target_path = self.target_path
+
+        final_name = target_path.parent / (target_path.name + "-" + temp_dir_path.name)
+        final_build_name = final_name.parent / (final_name.name + "-build")
+
+        # Rename the new index to the final name
+        os.rename(temp_dir_path, final_name)
+
+        # Create a temporary symlink to the final name
+        os.symlink(final_name, final_build_name)
+
+        # Finally replace the live index with the new one
+        os.replace(final_build_name, target_path)
+
+    def _make_index_at_temp_dir(self, temp_dir_path: Path) -> None:
+        """Generate a simple repository of Python wheels in a temp dir."""
+        origin_path = self.origin_path
+        origin_name = self.origin_name
+        projects = self.projects
+        cache = self.cache
+        target_path = self.target_path
         all_wheel_files: set[str] = set()
         canonical_name_to_metadata_name: Dict[str, str] = {}
         new_wheel_file_objects: List[WheelFile] = []
@@ -133,20 +180,3 @@ def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
             write_utf8_file(project_dir.joinpath("index.html"), str(project_index))
 
         write_utf8_file(temp_dir_path.joinpath(CACHE_FILE), json.dumps(cache))
-
-        final_name = target_path.parent / (target_path.name + "-" + temp_dir_path.name)
-        final_build_name = final_name.parent / (final_name.name + "-build")
-
-        # Rename the new index to the final name
-        os.rename(temp_dir_path, final_name)
-
-        # Create a temporary symlink to the final name
-        os.symlink(final_name, final_build_name)
-
-        # Finally replace the live index with the new one
-        os.replace(final_build_name, target_path)
-
-        if old_index:
-            rmtree(old_index)
-
-        return target_path, projects
