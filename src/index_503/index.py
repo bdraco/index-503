@@ -142,7 +142,9 @@ class IndexMaker:
             os.symlink(wheel_file_symlink_target, target_file)
 
         self.cache.remove_stale_keys(all_wheel_files)
-        self.repair_metadata_files(new_wheel_file_objects)
+        self.repair_metadata_files(
+            new_wheel_file_objects, wheel_file_name_to_metadata_path
+        )
         self.generate_index_pages(temp_dir_path, projects)
         self.cache.write_to_new(temp_dir_path)
 
