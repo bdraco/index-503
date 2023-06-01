@@ -73,7 +73,7 @@ class IndexMaker:
         self.all_wheel_files: set[str] = set()
         self.canonical_name_to_metadata_name: Dict[str, str] = {}
         self.new_wheel_file_objects: List[WheelFile] = []
-        self.file_name_as_posix_to_metadata_path: Dict[str, Path] = {}
+        self.wheel_file_name_to_metadata_path: Dict[str, Path] = {}
 
     def make_index(self) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
         """Generate a simple repository of Python wheels."""
@@ -120,7 +120,7 @@ class IndexMaker:
         all_wheel_files = self.all_wheel_files
         canonical_name_to_metadata_name = self.canonical_name_to_metadata_name
         new_wheel_file_objects = self.new_wheel_file_objects
-        file_name_as_posix_to_metadata_path = self.file_name_as_posix_to_metadata_path
+        wheel_file_name_to_metadata_path = self.wheel_file_name_to_metadata_path
 
         for wheel_file in glob.glob(str(origin_path.joinpath("*.whl"))):
             wheel_path = Path(wheel_file)
@@ -128,9 +128,8 @@ class IndexMaker:
             target_file = temp_dir_path.joinpath(wheel_file_name)
             metadata_path = target_file.with_suffix(f"{target_file.suffix}.metadata")
             wheel_file_symlink_target = f"../{origin_name}/{wheel_path.name}"
-            file_name_as_posix = target_file.relative_to(temp_dir_path).as_posix()
-            wheel_cache = raw_cache.get(file_name_as_posix)
-            all_wheel_files.add(file_name_as_posix)
+            wheel_cache = raw_cache.get(wheel_file_name)
+            all_wheel_files.add(wheel_file_name)
 
             if wheel_cache and wheel_cache["version"] == WHEEL_FILE_VERSION:
                 wheel_file_obj = WheelFile(**wheel_cache)
@@ -145,18 +144,18 @@ class IndexMaker:
                 wheel_metadata = metadata.loads(metadata_string)
                 metadata_name = wheel_metadata["Name"]
                 canonical_name = canonicalize_name(metadata_name)
-                file_name_as_posix_to_metadata_path[file_name_as_posix] = metadata_path
+                wheel_file_name_to_metadata_path[wheel_file_name] = metadata_path
                 wheel_file_obj = WheelFile(
                     version=WHEEL_FILE_VERSION,
                     metadata_name=metadata_name,
                     canonical_name=canonical_name,
-                    filename=file_name_as_posix,
+                    filename=wheel_file_name,
                     wheel_hash=get_sha256_hash(wheel_path),
                     requires_python=wheel_metadata.get("Requires-Python"),
                     metadata_hash=get_sha256_hash(metadata_path),
                 )
                 new_wheel_file_objects.append(wheel_file_obj)
-                raw_cache[file_name_as_posix] = asdict(wheel_file_obj)
+                raw_cache[wheel_file_name] = asdict(wheel_file_obj)
                 metadata_path.write_text(metadata_string)
 
             projects[metadata_name].append(wheel_file_obj)
@@ -181,16 +180,16 @@ class IndexMaker:
     ) -> None:
         """Repair the metadata files."""
         canonical_name_to_metadata_name = self.canonical_name_to_metadata_name
-        file_name_as_posix_to_metadata_path = self.file_name_as_posix_to_metadata_path
+        wheel_file_name_to_metadata_path = self.wheel_file_name_to_metadata_path
         new_wheel_file_objects = self.new_wheel_file_objects
         # Now fix all the metadata files and update the sha256 hash + cache
         for wheel_file_obj in new_wheel_file_objects:
-            file_name_as_posix = wheel_file_obj.filename
-            metadata_path = file_name_as_posix_to_metadata_path[file_name_as_posix]
+            wheel_file_name = wheel_file_obj.filename
+            metadata_path = wheel_file_name_to_metadata_path[wheel_file_name]
 
             if repair_metadata_file(metadata_path, canonical_name_to_metadata_name):
                 wheel_file_obj.metadata_hash = get_sha256_hash(metadata_path)
-                self.cache.cache[file_name_as_posix] = asdict(wheel_file_obj)
+                self.cache.cache[wheel_file_name] = asdict(wheel_file_obj)
 
     def generate_index_pages(self, temp_dir_path: Path) -> None:
         """Generate the index pages."""
