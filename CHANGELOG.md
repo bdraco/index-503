@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.4 (2023-06-01)
+### Fix
+
+* Legacy typing ([#5](https://github.com/bdraco/index-503/issues/5)) ([`3847fc3`](https://github.com/bdraco/index-503/commit/3847fc342235c81cb9b94c90c366b63215ab7c0f))
+* Caching ([#4](https://github.com/bdraco/index-503/issues/4)) ([`a303767`](https://github.com/bdraco/index-503/commit/a3037676d79fb59b0694745161b00a8f74251a39))
+
 ## v0.1.3 (2023-06-01)
 ### Fix
 
