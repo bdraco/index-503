@@ -24,7 +24,7 @@ import posixpath
 from dataclasses import asdict, dataclass
 from html import escape
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from airium import Airium
 from dist_meta import metadata
@@ -117,7 +117,7 @@ class WheelFile:
         return asdict(self)
 
     @classmethod
-    def from_cache(cls, cache_data: dict[str, Any]) -> Optional["WheelFile"]:
+    def from_cache(cls, cache_data: Dict[str, Any]) -> Optional["WheelFile"]:
         """Create a :class:`~.WheelFile` from a cache entry."""
         if cache_data["version"] != WHEEL_FILE_VERSION:
             return None
