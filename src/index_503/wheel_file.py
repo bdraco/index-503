@@ -113,7 +113,7 @@ class WheelFile:
         wheel_file_name = wheel_path.name
         metadata_name = wheel_metadata["Name"]
         canonical_name = canonicalize_name(metadata_name)
-        return WheelFile(
+        return cls(
             version=WHEEL_FILE_VERSION,
             metadata_name=metadata_name,
             canonical_name=canonical_name,
