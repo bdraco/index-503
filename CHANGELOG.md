@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.1 (2023-06-01)
+### Fix
+
+* Normalize names in metadata ([#1](https://github.com/bdraco/index-503/issues/1)) ([`fcb1bd7`](https://github.com/bdraco/index-503/commit/fcb1bd74416137779749b2b5d0bfdd057dde7590))
+
 ## v0.1.0 (2023-05-31)
 ### Feature
 
