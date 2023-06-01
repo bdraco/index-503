@@ -20,10 +20,10 @@ def test_repair_metadata_file(tmp_path: Path) -> None:
 
 
 def test_extract_metadata_missing():
-    metadata_path = FIXTURES.joinpath("sphinxcontrib.applehelp-1.0.3-py3-none-any.whl")
-    extract_metadata_from_wheel_file(metadata_path) is None
+    wheel_path = FIXTURES.joinpath("sphinxcontrib.applehelp-1.0.3-py3-none-any.whl")
+    extract_metadata_from_wheel_file(wheel_path) is None
 
 
 def test_extract_metadata():
-    metadata_path = FIXTURES.joinpath("CO2Signal-0.4.2-py3-none-any.whl")
-    extract_metadata_from_wheel_file(metadata_path) is not None
+    wheel_path = FIXTURES.joinpath("CO2Signal-0.4.2-py3-none-any.whl")
+    extract_metadata_from_wheel_file(wheel_path) is not None
