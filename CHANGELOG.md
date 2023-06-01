@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.0 (2023-06-01)
+### Fix
+
+* Drop python 3.8 support ([#39](https://github.com/bdraco/index-503/issues/39)) ([`8ada082`](https://github.com/bdraco/index-503/commit/8ada0828d42c732282ce771ead90baaf8c7dc6d1))
+* Tests need to work on case sensitive fs ([#38](https://github.com/bdraco/index-503/issues/38)) ([`9377df0`](https://github.com/bdraco/index-503/commit/9377df008ebce3683e7e59ec932ad4a95b4a4cf6))
+* Temp dir handling on older python ([#37](https://github.com/bdraco/index-503/issues/37)) ([`eea3ea3`](https://github.com/bdraco/index-503/commit/eea3ea37da8967e70cd32cf5ba2aa87f6a4379fd))
+
+### Breaking
+
+* python 3.8 support is removed ([`8ada082`](https://github.com/bdraco/index-503/commit/8ada0828d42c732282ce771ead90baaf8c7dc6d1))
+
 ## v1.0.0 (2023-06-01)
 ### Feature
 
