@@ -8,7 +8,7 @@ from dataclasses import asdict
 from operator import attrgetter
 from pathlib import Path
 from shutil import copyfile, rmtree
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from dist_meta import distributions, metadata
 from natsort import natsorted
@@ -54,7 +54,7 @@ def repair_metadata_file(
     return modified
 
 
-def extract_metadata_from_wheel_file(wheel_path: Path) -> str | None:
+def extract_metadata_from_wheel_file(wheel_path: Path) -> Optional[str]:
     """Extract the METADATA file from a wheel file."""
     with distributions.WheelDistribution.from_path(wheel_path) as wd:
         if not wd.has_file("METADATA"):  # pragma: no cover
