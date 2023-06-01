@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.8 (2023-06-01)
+### Fix
+
+* Small cleanups ([#20](https://github.com/bdraco/index-503/issues/20)) ([`62933c1`](https://github.com/bdraco/index-503/commit/62933c14f7ead15fcb2332fce4ee8e3269cca8f0))
+
 ## v0.1.7 (2023-06-01)
 ### Fix
 
