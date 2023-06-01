@@ -1,10 +1,10 @@
-import re
 from typing import Iterable, Union
 
 from airium import Airium
 from natsort import natsorted
 from yarl import URL
 
+from .util import canonicalize_name
 from .wheel_file import WheelFile
 
 
@@ -70,15 +70,6 @@ def generate_project_page(
                 page.br()
 
     return page
-
-
-_canonicalize_regex = re.compile(r"[-_.]+")
-# PEP 427: The build number must start with a digit.
-
-
-def canonicalize_name(name: str) -> str:
-    # This is taken from PEP 503.
-    return _canonicalize_regex.sub("-", name).lower()
 
 
 def get_meta_tags(page: Airium) -> None:
