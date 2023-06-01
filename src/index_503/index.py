@@ -66,7 +66,7 @@ class IndexMaker:
                 _LOGGER.debug("Removing old index %s", old_index)
                 rmtree(old_index)
 
-            return self.target_path
+            return target_path
         except Exception:
             _LOGGER.exception("Error generating index")
             rmtree(temp_dir)
