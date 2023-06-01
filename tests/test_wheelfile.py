@@ -20,6 +20,8 @@ def test_wheel_file(tmp_path: Path) -> None:
         "requires_python": None,
         "metadata_hash": "a6e73c9cf4f9469c5b308830afbc000bb806df5d894598dd499737e94974c27c",
     }
+    to_cache = wheel_file_obj.as_dict()
+    assert WheelFile.from_cache(to_cache) == wheel_file_obj
 
 
 def test_wheel_file_with_missing_metadata(tmp_path: Path) -> None:
