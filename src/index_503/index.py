@@ -26,7 +26,7 @@ CACHE_FILE = "cache.json"
 
 def repair_metadata_file(
     metadata_file: Path, canonical_name_to_metadata_name: Dict[str, str]
-) -> None:
+) -> bool:
     """Repair the metadata file."""
     metadata_file_content = metadata_file.read_text().splitlines()
     # We have to parse the metadata file manually because the dist_meta library
@@ -48,6 +48,8 @@ def repair_metadata_file(
             break
     if modified:
         metadata_file.write_text("\n".join(metadata_file_content))
+        return True
+    return False
 
 
 def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
@@ -80,29 +82,26 @@ def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
         temp_dir_path = Path(temp_dir)
         all_wheel_files: set[str] = set()
         canonical_name_to_metadata_name: Dict[str, str] = {}
-        metadata_files_to_repair: List[Path] = []
+        new_wheel_file_objects: List[WheelFile] = []
+        file_name_as_posix_to_metadata_path: Dict[str, Path] = {}
 
         for wheel_file in glob.glob(str(origin_path.joinpath("*.whl"))):
             wheel_path = Path(wheel_file)
             wheel_file_name = wheel_path.name
             all_wheel_files.add(wheel_file_name)
             target_file = temp_dir_path.joinpath(wheel_file_name)
-            metadata_filename = target_file.with_suffix(
-                f"{target_file.suffix}.metadata"
-            )
+            metadata_path = target_file.with_suffix(f"{target_file.suffix}.metadata")
             wheel_file_symlink_target = f"../{origin_name}/{wheel_path.name}"
             wheel_cache = cache.get(wheel_file_name)
 
             if wheel_cache and wheel_cache["version"] == WHEEL_FILE_VERSION:
                 wheel_file_obj = WheelFile(**wheel_cache)
                 projects[wheel_file_obj.metadata_name].append(wheel_file_obj)
-                previous_metadata_filename = target_path.joinpath(
-                    metadata_filename.name
-                )
+                previous_metadata_filename = target_path.joinpath(metadata_path.name)
                 canonical_name = wheel_file_obj.canonical_name
                 metadata_name = wheel_file_obj.metadata_name
                 canonical_name_to_metadata_name[canonical_name] = metadata_name
-                copyfile(previous_metadata_filename, metadata_filename)
+                copyfile(previous_metadata_filename, metadata_path)
                 os.symlink(wheel_file_symlink_target, target_file)
                 continue
 
@@ -113,26 +112,31 @@ def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
                 metadata_string = wd.read_file("METADATA")
                 wheel_metadata = metadata.loads(metadata_string)
 
-            metadata_filename.write_text(metadata_string)
-            metadata_files_to_repair.append(metadata_filename)
+            metadata_path.write_text(metadata_string)
             metadata_name = wheel_metadata["Name"]
             canonical_name = canonicalize_name(metadata_name)
+            file_name_as_posix = target_file.relative_to(temp_dir_path).as_posix()
+            file_name_as_posix_to_metadata_path[file_name_as_posix] = metadata_path
             wheel_file_obj = WheelFile(
                 version=WHEEL_FILE_VERSION,
                 metadata_name=metadata_name,
                 canonical_name=canonical_name,
-                filename=target_file.relative_to(temp_dir_path).as_posix(),
+                filename=file_name_as_posix,
                 wheel_hash=get_sha256_hash(wheel_path),
                 requires_python=wheel_metadata.get("Requires-Python"),
-                metadata_hash=get_sha256_hash(metadata_filename),
+                metadata_hash=get_sha256_hash(metadata_path),
             )
+            new_wheel_file_objects.append(wheel_file_obj)
             canonical_name_to_metadata_name[canonical_name] = metadata_name
             projects[metadata_name].append(wheel_file_obj)
             cache[wheel_file_name] = asdict(wheel_file_obj)
             os.symlink(wheel_file_symlink_target, target_file)
 
-        for metadata_filename in metadata_files_to_repair:
-            repair_metadata_file(metadata_filename, canonical_name_to_metadata_name)
+        for wheel_file_obj in new_wheel_file_objects:
+            file_name_as_posix = wheel_file_obj.filename
+            metadata_path = file_name_as_posix_to_metadata_path[file_name_as_posix]
+            if repair_metadata_file(metadata_path, canonical_name_to_metadata_name):
+                wheel_file_obj.metadata_hash = get_sha256_hash(metadata_path)
 
         removed_wheels = set(cache.keys()) - all_wheel_files
         for old_wheel_file in removed_wheels:
