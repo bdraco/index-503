@@ -3,7 +3,7 @@ from shutil import copyfile
 
 from index_503.metadata import extract_metadata_from_wheel_file, repair_metadata_file
 
-FIXTURES = Path(__file__).parent.joinpath("fixtures")
+from . import FIXTURES
 
 
 def test_repair_metadata_file(tmp_path: Path) -> None:
