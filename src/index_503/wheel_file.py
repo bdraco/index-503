@@ -29,6 +29,8 @@ from airium import Airium
 from typing_extensions import Literal
 from yarl import URL
 
+WHEEL_FILE_VERSION = 1
+
 
 @dataclass
 class WheelFile:
@@ -36,10 +38,17 @@ class WheelFile:
     Represents a wheel file in the repository.
     """
 
-    #: The name of the wheel file.
-    name: str
+    # The version of the wheel file format.
+    version: int
 
+    # The canonicalized name of the project.
+    canonical_name: str
+
+    # The filename of the wheel file.
     filename: str
+
+    # The Name field from the METADATA file.
+    metadata_name: str
 
     wheel_hash: str  # sha256
     """
