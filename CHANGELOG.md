@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.7 (2023-06-01)
+### Fix
+
+* Ensure new wheels can be found ([#19](https://github.com/bdraco/index-503/issues/19)) ([`441da84`](https://github.com/bdraco/index-503/commit/441da8446f7492bc81c8a26b5f04bf1567e21f94))
+
 ## v0.1.6 (2023-06-01)
 ### Fix
 
