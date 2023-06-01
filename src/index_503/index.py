@@ -79,6 +79,9 @@ class IndexMaker:
 
     def make_index(self) -> Path:
         """Generate a simple repository of Python wheels."""
+        target_path = self.target_path
+        old_index = target_path.readlink() if target_path.exists() else None
+
         with tempfile.TemporaryDirectory(
             dir=str(self.target_path.parent), ignore_cleanup_errors=True
         ) as temp_dir:
@@ -86,31 +89,30 @@ class IndexMaker:
             temp_dir_path = Path(temp_dir)
 
             self._make_index_at_temp_dir(temp_dir_path)
-            self._atomic_replace_old_index(temp_dir_path)
+            self._atomic_replace_old_index(temp_dir_path, target_path)
 
-            old_index = (
-                self.target_path.readlink() if self.target_path.exists() else None
-            )
             if old_index:
+                _LOGGER.debug("Removing old index %s", old_index)
                 rmtree(old_index)
 
             return self.target_path
 
-    def _atomic_replace_old_index(self, temp_dir_path: Path) -> None:
+    def _atomic_replace_old_index(self, temp_dir_path: Path, target_path: Path) -> None:
         """Atomically replace the old index with the new one."""
-        final_name = self.target_path.parent / (
-            self.target_path.name + "-" + temp_dir_path.name
-        )
+        final_name = target_path.parent / (target_path.name + "-" + temp_dir_path.name)
         final_build_name = final_name.parent / (final_name.name + "-build")
 
+        _LOGGER.debug("Renaming %s with %s", temp_dir_path, final_name)
         # Rename the new index to the final name
         os.rename(temp_dir_path, final_name)
 
+        _LOGGER.debug("Symlinking %s with %s", final_name, final_build_name)
         # Create a temporary symlink to the final name
         os.symlink(final_name, final_build_name)
 
+        _LOGGER.debug("Replacing %s with %s", final_build_name, target_path)
         # Finally replace the live index with the new one
-        os.replace(final_build_name, self.target_path)
+        os.replace(final_build_name, target_path)
 
     def _make_index_at_temp_dir(self, temp_dir_path: Path) -> None:
         """Generate a simple repository of Python wheels in a temp dir."""

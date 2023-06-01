@@ -36,7 +36,7 @@ def load_json_file(filename: Path) -> Dict[str, Dict[str, Any]]:
 @contextmanager
 def exclusive_lock(origin_path: Path) -> Generator[None, None, None]:
     parent = origin_path.parent
-    lock_file = parent / (origin_path.name + ".index_503.lock")
+    lock_file = parent / (f".{origin_path.name}.index_503.lock")
     with lock_file.open("a") as fh:
         try:
             fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
