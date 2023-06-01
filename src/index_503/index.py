@@ -99,6 +99,9 @@ def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
                 previous_metadata_filename = target_path.joinpath(
                     metadata_filename.name
                 )
+                canonical_name = wheel_file_obj.canonical_name
+                metadata_name = wheel_file_obj.metadata_name
+                canonical_name_to_metadata_name[canonical_name] = metadata_name
                 copyfile(previous_metadata_filename, metadata_filename)
                 os.symlink(wheel_file_symlink_target, target_file)
                 continue
