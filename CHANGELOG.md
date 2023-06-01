@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.5 (2023-06-01)
+### Fix
+
+* Canonicalize_name in repairs ([#6](https://github.com/bdraco/index-503/issues/6)) ([`12be36a`](https://github.com/bdraco/index-503/commit/12be36a6bcb7d64867e717e8aca0fd875562eab6))
+
 ## v0.1.4 (2023-06-01)
 ### Fix
 
