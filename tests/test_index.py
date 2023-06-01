@@ -39,13 +39,15 @@ def test_make_index_fails(tmp_path: Path) -> None:
     origin_path, _ = setup_wheels(tmp_path)
     parent_dir = origin_path.parent
 
-    with pytest.raises(Exception), patch(
-        "index_503.index._make_index_at_temp_dir", side_effect=Exception
+    with pytest.raises(ValueError), patch(
+        "index_503.index.IndexMaker._atomic_replace_old_index", side_effect=ValueError
     ):
         make_index(origin_path)
 
-    parent_dir_contents = list(parent_dir.iterdir())
-    assert len(parent_dir_contents) == 1
+    parent_dir_contents = {path.name for path in parent_dir.iterdir()}
+    assert len(parent_dir_contents) == 2
+    # The lock file should always exist
+    assert parent_dir_contents == {"musllinux", ".musllinux.index_503.lock"}
 
 
 def test_make_index_end_to_end(tmp_path: Path) -> None:
