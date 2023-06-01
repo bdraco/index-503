@@ -31,26 +31,26 @@ from yarl import URL
 
 WHEEL_FILE_VERSION = 9
 
+HASH_FORMAT = "sha256"
+
 
 @dataclass
 class WheelFile:
-    """
-    Represents a wheel file in the repository.
-    """
+    """Represents a wheel file in the repository."""
 
-    # The version of the wheel file format.
     version: int
+    """The version of the wheel file format."""
 
-    # The canonicalized name of the project.
     canonical_name: str
+    """The canonicalized name of the project."""
 
-    # The filename of the wheel file.
     filename: str
+    """The filename of the wheel file."""
 
-    # The Name field from the METADATA file.
     metadata_name: str
+    """The Name field from the METADATA file."""
 
-    wheel_hash: str  # sha256
+    wheel_hash: str  # HASH_FORMAT
     """
     The hash of the wheel file.
 
@@ -85,7 +85,7 @@ class WheelFile:
 
         base_url = URL(base_url)
 
-        href = f"{base_url / self.filename}#sha256={self.wheel_hash}"
+        href = f"{base_url / self.filename}#{HASH_FORMAT}={self.wheel_hash}"
         kwargs = {"href": href}
 
         if self.requires_python is not None:
@@ -93,7 +93,7 @@ class WheelFile:
         if self.metadata_hash is True:
             kwargs["data-dist-info-metadata"] = "true"
         elif self.metadata_hash is not None:
-            kwargs["data-dist-info-metadata"] = f"sha256={self.metadata_hash}"
+            kwargs["data-dist-info-metadata"] = f"{HASH_FORMAT}={self.metadata_hash}"
 
         with page.a(**kwargs):
             page(posixpath.basename(self.filename))
