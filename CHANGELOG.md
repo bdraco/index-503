@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.2 (2023-06-01)
+### Fix
+
+* Split cache into its own module ([#23](https://github.com/bdraco/index-503/issues/23)) ([`c5356af`](https://github.com/bdraco/index-503/commit/c5356af842bcf556157553ff86c0451922ea2cc7))
+
 ## v0.2.1 (2023-06-01)
 ### Fix
 
