@@ -10,12 +10,11 @@ from pathlib import Path
 from shutil import copyfile, rmtree
 from typing import Any, Dict, List, Tuple
 
-from dist_meta import metadata
 from natsort import natsorted
 from yarl import URL
 
 from .file import write_utf8_file
-from .metadata import extract_metadata_from_wheel_file, repair_metadata_file
+from .metadata import repair_metadata_file
 from .page_generator import generate_index, generate_project_page
 from .util import canonicalize_name, get_sha256_hash, load_json_file
 from .wheel_file import WHEEL_FILE_VERSION, WheelFile
@@ -127,23 +126,18 @@ class IndexMaker:
             wheel_file_name = wheel_path.name
             target_file = temp_dir_path.joinpath(wheel_file_name)
             metadata_path = target_file.with_suffix(f"{target_file.suffix}.metadata")
-            wheel_file_symlink_target = f"../{origin_name}/{wheel_path.name}"
+            wheel_file_symlink_target = f"../{origin_name}/{wheel_file_name}"
             wheel_cache = raw_cache.get(wheel_file_name)
             all_wheel_files.add(wheel_file_name)
 
             if wheel_cache and wheel_cache["version"] == WHEEL_FILE_VERSION:
                 wheel_file_obj = WheelFile(**wheel_cache)
-                previous_metadata_filename = target_path.joinpath(metadata_path.name)
-                copyfile(previous_metadata_filename, metadata_path)
+                copyfile(target_path.joinpath(metadata_path.name), metadata_path)
             else:
-                metadata_string = extract_metadata_from_wheel_file(wheel_path)
-                if not metadata_string:
+                maybe_wheel_file_obj = WheelFile.from_wheel(wheel_path, metadata_path)
+                if not maybe_wheel_file_obj:
                     continue
-                metadata_path.write_text(metadata_string)
-                wheel_metadata = metadata.loads(metadata_string)
-                wheel_file_obj = WheelFile.from_wheel(
-                    wheel_path, metadata_path, wheel_metadata
-                )
+                wheel_file_obj = maybe_wheel_file_obj
                 wheel_file_name_to_metadata_path[wheel_file_name] = metadata_path
                 new_wheel_file_objects.append(wheel_file_obj)
                 raw_cache[wheel_file_name] = asdict(wheel_file_obj)

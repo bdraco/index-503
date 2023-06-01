@@ -27,10 +27,11 @@ from pathlib import Path
 from typing import Optional, Union
 
 from airium import Airium
-from dist_meta.metadata import MetadataMapping
+from dist_meta import metadata
 from typing_extensions import Literal
 from yarl import URL
 
+from .metadata import extract_metadata_from_wheel_file
 from .util import canonicalize_name, get_sha256_hash
 
 WHEEL_FILE_VERSION = 9
@@ -107,9 +108,13 @@ class WheelFile:
         cls,
         wheel_path: Path,
         metadata_path: Path,
-        wheel_metadata: MetadataMapping,
-    ) -> "WheelFile":
+    ) -> Optional["WheelFile"]:
         """Create a :class:`~.WheelFile` from a wheel file and its metadata file."""
+        metadata_string = extract_metadata_from_wheel_file(wheel_path)
+        if not metadata_string:
+            return None
+        metadata_path.write_text(metadata_string)
+        wheel_metadata = metadata.loads(metadata_string)
         wheel_file_name = wheel_path.name
         metadata_name = wheel_metadata["Name"]
         canonical_name = canonicalize_name(metadata_name)
