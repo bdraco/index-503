@@ -8,7 +8,7 @@ from dataclasses import asdict
 from operator import attrgetter
 from pathlib import Path
 from shutil import copyfile, rmtree
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Set
 
 from natsort import natsorted
 from yarl import URL
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CACHE_FILE = "cache.json"
 
 
-def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
+def make_index(origin_path: Path) -> Path:
     """Generate a simple repository of Python wheels.
 
     This function will take a directory of wheels at the top level
@@ -55,6 +55,12 @@ class IndexCache:
         cache_file = target.joinpath(CACHE_FILE)
         write_utf8_file(cache_file, json.dumps(self.cache))
 
+    def remove_stale_keys(self, all_wheel_files: Set[str]) -> None:
+        """Remove any wheel file names that no longer exist."""
+        removed_wheels = set(self.cache.keys()) - all_wheel_files
+        for old_wheel_file in removed_wheels:
+            del self.cache[old_wheel_file]
+
 
 class IndexMaker:
     """Generate a simple repository of Python wheels."""
@@ -67,14 +73,10 @@ class IndexMaker:
         self.target_path = target_path
         self.old_index = target_path.readlink() if target_path.exists() else None
         self.target_path_parent = target_path.parent
-        self.projects: Dict[str, List[WheelFile]] = defaultdict(list)
         self.cache = IndexCache(target_path)
-        self.all_wheel_files: set[str] = set()
         self.canonical_name_to_metadata_name: Dict[str, str] = {}
-        self.new_wheel_file_objects: List[WheelFile] = []
-        self.wheel_file_name_to_metadata_path: Dict[str, Path] = {}
 
-    def make_index(self) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
+    def make_index(self) -> Path:
         """Generate a simple repository of Python wheels."""
         with tempfile.TemporaryDirectory(
             dir=str(self.target_path_parent), ignore_cleanup_errors=True
@@ -87,7 +89,7 @@ class IndexMaker:
             if self.old_index:
                 rmtree(self.old_index)
 
-            return self.target_path, self.projects
+            return self.target_path
 
     def _atomic_replace_old_index(self, temp_dir_path: Path) -> None:
         """Atomically replace the old index with the new one."""
@@ -107,14 +109,19 @@ class IndexMaker:
 
     def _make_index_at_temp_dir(self, temp_dir_path: Path) -> None:
         """Generate a simple repository of Python wheels in a temp dir."""
+        new_wheel_file_objects: List[WheelFile] = []
+        projects: Dict[str, List[WheelFile]] = defaultdict(list)
+        wheel_file_name_to_metadata_path: Dict[str, Path] = {}
+        all_wheel_files: Set[str] = set()
+
         for wheel_file in glob.glob(str(self.origin_path.joinpath("*.whl"))):
             wheel_path = Path(wheel_file)
             wheel_file_name = wheel_path.name
+            all_wheel_files.add(wheel_file_name)
             target_file = temp_dir_path.joinpath(wheel_file_name)
             metadata_path = target_file.with_suffix(f"{target_file.suffix}.metadata")
             wheel_file_symlink_target = f"../{self.origin_name}/{wheel_file_name}"
             wheel_cache = self.cache.cache.get(wheel_file_name)
-            self.all_wheel_files.add(wheel_file_name)
 
             if wheel_cache and wheel_cache["version"] == WHEEL_FILE_VERSION:
                 wheel_file_obj = WheelFile(**wheel_cache)
@@ -124,32 +131,31 @@ class IndexMaker:
                 if not maybe_wheel_file_obj:
                     continue
                 wheel_file_obj = maybe_wheel_file_obj
-                self.wheel_file_name_to_metadata_path[wheel_file_name] = metadata_path
-                self.new_wheel_file_objects.append(wheel_file_obj)
+                wheel_file_name_to_metadata_path[wheel_file_name] = metadata_path
+                new_wheel_file_objects.append(wheel_file_obj)
                 self.cache.cache[wheel_file_name] = asdict(wheel_file_obj)
 
             canonical_name = wheel_file_obj.canonical_name
             metadata_name = wheel_file_obj.metadata_name
-            self.projects[metadata_name].append(wheel_file_obj)
+            projects[metadata_name].append(wheel_file_obj)
             self.canonical_name_to_metadata_name[canonical_name] = metadata_name
             os.symlink(wheel_file_symlink_target, target_file)
 
-        self.repair_metadata_files()
-        self.generate_index_pages(temp_dir_path)
+        self.cache.remove_stale_keys(all_wheel_files)
+        self.repair_metadata_files(new_wheel_file_objects)
+        self.generate_index_pages(temp_dir_path, projects)
         self.cache.write_to_new(temp_dir_path)
 
-    def remove_old_wheel_files(self) -> None:
-        # Remove any old wheel files from the cache
-        removed_wheels = set(self.cache.cache.keys()) - self.all_wheel_files
-        for old_wheel_file in removed_wheels:
-            del self.cache.cache[old_wheel_file]
-
-    def repair_metadata_files(self) -> None:
+    def repair_metadata_files(
+        self,
+        new_wheel_file_objects: List[WheelFile],
+        wheel_file_name_to_metadata_path: Dict[str, Path] = {},
+    ) -> None:
         """Repair the metadata files."""
         # Now fix all the metadata files and update the sha256 hash + cache
-        for wheel_file_obj in self.new_wheel_file_objects:
+        for wheel_file_obj in new_wheel_file_objects:
             wheel_file_name = wheel_file_obj.filename
-            metadata_path = self.wheel_file_name_to_metadata_path[wheel_file_name]
+            metadata_path = wheel_file_name_to_metadata_path[wheel_file_name]
 
             if repair_metadata_file(
                 metadata_path, self.canonical_name_to_metadata_name
@@ -157,13 +163,15 @@ class IndexMaker:
                 wheel_file_obj.metadata_hash = get_sha256_hash(metadata_path)
                 self.cache.cache[wheel_file_name] = asdict(wheel_file_obj)
 
-    def generate_index_pages(self, temp_dir_path: Path) -> None:
+    def generate_index_pages(
+        self, temp_dir_path: Path, projects: Dict[str, List[WheelFile]]
+    ) -> None:
         """Generate the index pages."""
-        index_content = str(generate_index(self.projects.keys()))
+        index_content = str(generate_index(projects.keys()))
         write_utf8_file(temp_dir_path.joinpath("index.html"), index_content)
         project_base_url = URL("../")
 
-        for project_name, project_files in self.projects.items():
+        for project_name, project_files in projects.items():
             project_dir = temp_dir_path.joinpath(canonicalize_name(project_name))
             project_dir.mkdir(exist_ok=True)
             project_index = generate_project_page(
@@ -173,3 +181,5 @@ class IndexMaker:
             )
 
             write_utf8_file(project_dir.joinpath("index.html"), str(project_index))
+
+        _LOGGER.debug("Generated index pages for %s projects.", len(projects))

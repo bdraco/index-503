@@ -12,5 +12,5 @@ def main_cli(origin: str) -> None:
     origin_path = Path(origin)
     if not origin_path.exists():
         raise FileNotFoundError(f"Directory {origin_path} does not exist")
-    target_path, projects = make_index(origin_path)
-    print(f"Index generated at {target_path} with {len(projects)} projects.")
+    target_path = make_index(origin_path)
+    print(f"Index generated at {target_path}")
