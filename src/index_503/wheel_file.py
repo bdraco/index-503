@@ -112,7 +112,7 @@ class WheelFile:
 
         self.metadata_hash = get_sha256_hash(metadata_path)
 
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self) -> Dict[str, Any]:
         """Return a dictionary representation of this wheel file."""
         return asdict(self)
 
