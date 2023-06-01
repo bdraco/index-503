@@ -158,6 +158,29 @@ class IndexMaker:
             canonical_name_to_metadata_name[canonical_name] = metadata_name
             os.symlink(wheel_file_symlink_target, target_file)
 
+        self.repair_metadata_files(
+            canonical_name_to_metadata_name,
+            file_name_as_posix_to_metadata_path,
+            new_wheel_file_objects,
+        )
+        self.remove_old_wheel_files(all_wheel_files, cache)
+        self.generate_index_pages(temp_dir_path)
+        self.cache.write_to_new(temp_dir_path)
+
+    def remove_old_wheel_files(
+        self, all_wheel_files: set[str], cache: IndexCache
+    ) -> None:
+        # Remove any old wheel files from the cache
+        removed_wheels = set(cache.cache.keys()) - all_wheel_files
+        for old_wheel_file in removed_wheels:
+            del cache.cache[old_wheel_file]
+
+    def repair_metadata_files(
+        self,
+        canonical_name_to_metadata_name: Dict[str, str],
+        file_name_as_posix_to_metadata_path: Dict[str, Path],
+        new_wheel_file_objects: List[WheelFile],
+    ) -> None:
         # Now fix all the metadata files and update the sha256 hash + cache
         for wheel_file_obj in new_wheel_file_objects:
             file_name_as_posix = wheel_file_obj.filename
@@ -165,15 +188,7 @@ class IndexMaker:
 
             if repair_metadata_file(metadata_path, canonical_name_to_metadata_name):
                 wheel_file_obj.metadata_hash = get_sha256_hash(metadata_path)
-                cache.cache[file_name_as_posix] = asdict(wheel_file_obj)
-
-        # Remove any old wheel files from the cache
-        removed_wheels = set(cache.cache.keys()) - all_wheel_files
-        for old_wheel_file in removed_wheels:
-            del cache.cache[old_wheel_file]
-
-        self.generate_index_pages(temp_dir_path)
-        self.cache.write_to_new(temp_dir_path)
+                self.cache.cache[file_name_as_posix] = asdict(wheel_file_obj)
 
     def generate_index_pages(self, temp_dir_path: Path) -> None:
         """Generate the index pages."""
