@@ -36,11 +36,15 @@ def repair_metadata_file(
     for index, line in enumerate(metadata_file_content):
         if line.startswith("Requires-Dist: "):
             items = line.split(" ")
-            canonical_name = canonicalize_name(items[1])
+            original_name = items[1]
+            canonical_name = canonicalize_name(original_name)
             metadata_name = canonical_name_to_metadata_name.get(canonical_name)
-            if metadata_name and metadata_name != canonical_name:
+            if metadata_name and metadata_name != original_name:
                 _LOGGER.warning(
-                    f"Repairing {metadata_file} Requires-Dist {canonical_name} -> {metadata_name}"
+                    "Repairing %s Requires-Dist %s -> %s",
+                    metadata_file,
+                    original_name,
+                    metadata_name,
                 )
                 items[1] = metadata_name
                 metadata_file_content[index] = " ".join(items)
