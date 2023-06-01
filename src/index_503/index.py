@@ -1,5 +1,4 @@
 import glob
-import json
 import logging
 import os
 import tempfile
@@ -8,15 +7,16 @@ from dataclasses import asdict
 from operator import attrgetter
 from pathlib import Path
 from shutil import copyfile, rmtree
-from typing import Any, Dict, List, Set
+from typing import Dict, List, Set
 
 from natsort import natsorted
 from yarl import URL
 
+from .cache import IndexCache
 from .file import write_utf8_file
 from .metadata import repair_metadata_file
 from .page_generator import generate_index, generate_project_page
-from .util import canonicalize_name, exclusive_lock, get_sha256_hash, load_json_file
+from .util import canonicalize_name, exclusive_lock, get_sha256_hash
 from .wheel_file import WHEEL_FILE_VERSION, WheelFile
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,30 +40,6 @@ def make_index(origin_path: Path) -> Path:
     """
     with exclusive_lock(origin_path):
         return IndexMaker(origin_path).make_index()
-
-
-class IndexCache:
-    def __init__(self, target_path: Path) -> None:
-        """Cache of WheelFiles between runs."""
-        cache_file = target_path.joinpath(CACHE_FILE)
-        self.cache_file = cache_file
-        self.cache: Dict[str, Dict[str, Any]] = {}
-
-    def load(self) -> None:
-        """Load the cache from a file."""
-        if self.cache_file.exists():
-            self.cache = load_json_file(self.cache_file)
-
-    def write_to_new(self, target: Path) -> None:
-        """Write the cache to a new file."""
-        new_cache_file = target.joinpath(CACHE_FILE)
-        write_utf8_file(new_cache_file, json.dumps(self.cache))
-
-    def remove_stale_keys(self, all_wheel_files: Set[str]) -> None:
-        """Remove any wheel file names that no longer exist."""
-        removed_wheels = set(self.cache.keys()) - all_wheel_files
-        for old_wheel_file in removed_wheels:
-            del self.cache[old_wheel_file]
 
 
 class IndexMaker:
