@@ -134,30 +134,22 @@ class IndexMaker:
             if wheel_cache and wheel_cache["version"] == WHEEL_FILE_VERSION:
                 wheel_file_obj = WheelFile(**wheel_cache)
                 previous_metadata_filename = target_path.joinpath(metadata_path.name)
-                canonical_name = wheel_file_obj.canonical_name
-                metadata_name = wheel_file_obj.metadata_name
                 copyfile(previous_metadata_filename, metadata_path)
             else:
                 metadata_string = extract_metadata_from_wheel_file(wheel_path)
                 if not metadata_string:
                     continue
+                metadata_path.write_text(metadata_string)
                 wheel_metadata = metadata.loads(metadata_string)
-                metadata_name = wheel_metadata["Name"]
-                canonical_name = canonicalize_name(metadata_name)
-                wheel_file_name_to_metadata_path[wheel_file_name] = metadata_path
-                wheel_file_obj = WheelFile(
-                    version=WHEEL_FILE_VERSION,
-                    metadata_name=metadata_name,
-                    canonical_name=canonical_name,
-                    filename=wheel_file_name,
-                    wheel_hash=get_sha256_hash(wheel_path),
-                    requires_python=wheel_metadata.get("Requires-Python"),
-                    metadata_hash=get_sha256_hash(metadata_path),
+                wheel_file_obj = WheelFile.from_wheel(
+                    wheel_path, metadata_path, wheel_metadata
                 )
+                wheel_file_name_to_metadata_path[wheel_file_name] = metadata_path
                 new_wheel_file_objects.append(wheel_file_obj)
                 raw_cache[wheel_file_name] = asdict(wheel_file_obj)
-                metadata_path.write_text(metadata_string)
 
+            canonical_name = wheel_file_obj.canonical_name
+            metadata_name = wheel_file_obj.metadata_name
             projects[metadata_name].append(wheel_file_obj)
             canonical_name_to_metadata_name[canonical_name] = metadata_name
             os.symlink(wheel_file_symlink_target, target_file)
@@ -175,9 +167,7 @@ class IndexMaker:
         for old_wheel_file in removed_wheels:
             del raw_cache[old_wheel_file]
 
-    def repair_metadata_files(
-        self,
-    ) -> None:
+    def repair_metadata_files(self) -> None:
         """Repair the metadata files."""
         canonical_name_to_metadata_name = self.canonical_name_to_metadata_name
         wheel_file_name_to_metadata_path = self.wheel_file_name_to_metadata_path
