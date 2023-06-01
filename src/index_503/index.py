@@ -16,7 +16,7 @@ from yarl import URL
 from .file import write_utf8_file
 from .metadata import repair_metadata_file
 from .page_generator import generate_index, generate_project_page
-from .util import canonicalize_name, get_sha256_hash, load_json_file
+from .util import canonicalize_name, exclusive_lock, get_sha256_hash, load_json_file
 from .wheel_file import WHEEL_FILE_VERSION, WheelFile
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +38,8 @@ def make_index(origin_path: Path) -> Path:
     This will generate
     musllinux-index
     """
-    return IndexMaker(origin_path).make_index()
+    with exclusive_lock(origin_path):
+        return IndexMaker(origin_path).make_index()
 
 
 class IndexCache:
