@@ -2,6 +2,20 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.0 (2023-06-01)
+### Feature
+
+* Refactor to make more testable ([#27](https://github.com/bdraco/index-503/issues/27)) ([`9c0560a`](https://github.com/bdraco/index-503/commit/9c0560aeb471f6740f145b6a2bb0b8342755dcf1))
+
+### Fix
+
+* More py3.8 typing fixes ([#31](https://github.com/bdraco/index-503/issues/31)) ([`8839d55`](https://github.com/bdraco/index-503/commit/8839d559b578626c0d0b6db03f8fd739cd69ac7b))
+* Legacy typing for py3.8 ([#29](https://github.com/bdraco/index-503/issues/29)) ([`acf87a7`](https://github.com/bdraco/index-503/commit/acf87a7204e9969115358d63a190640eaa9ce940))
+
+### Breaking
+
+* Drop python 3.7 support ([`9c0560a`](https://github.com/bdraco/index-503/commit/9c0560aeb471f6740f145b6a2bb0b8342755dcf1))
+
 ## v0.2.2 (2023-06-01)
 ### Fix
 
