@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v2.1.0 (2023-06-01)
+### Feature
+
+* Add tests for exclusive_lock ([#42](https://github.com/bdraco/index-503/issues/42)) ([`7d8395c`](https://github.com/bdraco/index-503/commit/7d8395cec229325b4eaca91e3a952dba505b3b0a))
+
+### Fix
+
+* Util test did not sleep long enough for slow runner ([#45](https://github.com/bdraco/index-503/issues/45)) ([`e82ed20`](https://github.com/bdraco/index-503/commit/e82ed20906a0494af723a8636e89c50eda8eada5))
+* Util test did not sleep long enough for slow runner ([#44](https://github.com/bdraco/index-503/issues/44)) ([`5e97bda`](https://github.com/bdraco/index-503/commit/5e97bda7f59505399d38cddbd1f6980aef1a5bb5))
+* Add missing cover for file ([#43](https://github.com/bdraco/index-503/issues/43)) ([`761fe3e`](https://github.com/bdraco/index-503/commit/761fe3e1c31b7a012c137c43dbe6fc30b4ab88d1))
+
 ## v2.0.0 (2023-06-01)
 ### Fix
 
