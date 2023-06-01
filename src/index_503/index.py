@@ -48,13 +48,16 @@ class IndexCache:
         cache_file = target_path.joinpath(CACHE_FILE)
         self.cache_file = cache_file
         self.cache: Dict[str, Dict[str, Any]] = {}
-        if cache_file.exists():
-            self.cache = load_json_file(cache_file)
+
+    def load(self) -> None:
+        """Load the cache from a file."""
+        if self.cache_file.exists():
+            self.cache = load_json_file(self.cache_file)
 
     def write_to_new(self, target: Path) -> None:
         """Write the cache to a new file."""
-        cache_file = target.joinpath(CACHE_FILE)
-        write_utf8_file(cache_file, json.dumps(self.cache))
+        new_cache_file = target.joinpath(CACHE_FILE)
+        write_utf8_file(new_cache_file, json.dumps(self.cache))
 
     def remove_stale_keys(self, all_wheel_files: Set[str]) -> None:
         """Remove any wheel file names that no longer exist."""
@@ -79,6 +82,7 @@ class IndexMaker:
         with tempfile.TemporaryDirectory(
             dir=str(self.target_path.parent), ignore_cleanup_errors=True
         ) as temp_dir:
+            self.cache.load()
             temp_dir_path = Path(temp_dir)
 
             self._make_index_at_temp_dir(temp_dir_path)
