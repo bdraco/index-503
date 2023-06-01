@@ -85,7 +85,7 @@ def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
         for wheel_file in glob.glob(str(origin_path.joinpath("*.whl"))):
             wheel_path = Path(wheel_file)
             wheel_file_name = wheel_path.name
-            all_wheel_files.add
+            all_wheel_files.add(wheel_file_name)
             target_file = temp_dir_path.joinpath(wheel_file_name)
             metadata_filename = target_file.with_suffix(
                 f"{target_file.suffix}.metadata"
@@ -124,7 +124,7 @@ def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
             )
             canonical_name_to_metadata_name[canonical_name] = metadata_name
             projects[metadata_name].append(wheel_file_obj)
-            cache[wheel_file_obj.filename] = asdict(wheel_file_obj)
+            cache[wheel_file_name] = asdict(wheel_file_obj)
             os.symlink(wheel_file_symlink_target, target_file)
 
         for metadata_filename in metadata_files_to_repair:
