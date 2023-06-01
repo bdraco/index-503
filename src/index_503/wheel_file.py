@@ -23,11 +23,15 @@
 import posixpath
 from dataclasses import dataclass
 from html import escape
+from pathlib import Path
 from typing import Optional, Union
 
 from airium import Airium
+from dist_meta.metadata import MetadataMapping
 from typing_extensions import Literal
 from yarl import URL
+
+from .util import canonicalize_name, get_sha256_hash
 
 WHEEL_FILE_VERSION = 9
 
@@ -97,3 +101,24 @@ class WheelFile:
 
         with page.a(**kwargs):
             page(posixpath.basename(self.filename))
+
+    @classmethod
+    def from_wheel(
+        cls,
+        wheel_path: Path,
+        metadata_path: Path,
+        wheel_metadata: MetadataMapping,
+    ) -> "WheelFile":
+        """Create a :class:`~.WheelFile` from a wheel file and its metadata file."""
+        wheel_file_name = wheel_path.name
+        metadata_name = wheel_metadata["Name"]
+        canonical_name = canonicalize_name(metadata_name)
+        return WheelFile(
+            version=WHEEL_FILE_VERSION,
+            metadata_name=metadata_name,
+            canonical_name=canonical_name,
+            filename=wheel_file_name,
+            wheel_hash=get_sha256_hash(wheel_path),
+            requires_python=wheel_metadata.get("Requires-Python"),
+            metadata_hash=get_sha256_hash(metadata_path),
+        )
