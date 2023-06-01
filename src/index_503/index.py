@@ -172,6 +172,12 @@ class IndexMaker:
         for old_wheel_file in removed_wheels:
             del cache.cache[old_wheel_file]
 
+        self.generate_index_pages(temp_dir_path)
+        self.cache.write_to_new(temp_dir_path)
+
+    def generate_index_pages(self, temp_dir_path: Path) -> None:
+        """Generate the index pages."""
+        projects = self.projects
         index_content = str(generate_index(projects.keys()))
         write_utf8_file(temp_dir_path.joinpath("index.html"), index_content)
         project_base_url = URL("../")
@@ -186,5 +192,3 @@ class IndexMaker:
             )
 
             write_utf8_file(project_dir.joinpath("index.html"), str(project_index))
-
-        self.cache.write_to_new(temp_dir_path)
