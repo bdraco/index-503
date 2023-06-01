@@ -1,6 +1,10 @@
 import json
 from pathlib import Path
 from shutil import copyfile
+from typing import Tuple
+from unittest.mock import patch
+
+import pytest
 
 from index_503.index import make_index
 from index_503.wheel_file import WHEEL_FILE_VERSION
@@ -15,16 +19,38 @@ TEST_WHEELS = (
 )
 
 
-def test_make_index_end_to_end(tmp_path: Path) -> None:
-    """Test make_index() end to end."""
+def setup_wheels(tmp_path: Path) -> Tuple[Path, Path]:
+    """Setup wheels for testing."""
     origin_path = tmp_path.joinpath("musllinux")
     origin_path.mkdir()
-    origin_path_index = tmp_path.joinpath("musllinux-index")
 
     for test_wheel in TEST_WHEELS:
         fixture_wheel_path = FIXTURES.joinpath(test_wheel)
         origin_wheel_path = origin_path.joinpath(test_wheel)
         copyfile(fixture_wheel_path, origin_wheel_path)
+
+    origin_path_index = tmp_path.joinpath("musllinux-index")
+
+    return origin_path, origin_path_index
+
+
+def test_make_index_fails(tmp_path: Path) -> None:
+    """Test make index cleans up on failure."""
+    origin_path, _ = setup_wheels(tmp_path)
+    parent_dir = origin_path.parent
+
+    with pytest.raises(Exception), patch(
+        "index_503.index._make_index_at_temp_dir", side_effect=Exception
+    ):
+        make_index(origin_path)
+
+    parent_dir_contents = list(parent_dir.iterdir())
+    assert len(parent_dir_contents) == 1
+
+
+def test_make_index_end_to_end(tmp_path: Path) -> None:
+    """Test make_index() end to end."""
+    origin_path, origin_path_index = setup_wheels(tmp_path)
 
     for _ in range(2):
         assert make_index(origin_path) == origin_path_index
