@@ -42,6 +42,21 @@ def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
     return IndexMaker(origin_path).make_index()
 
 
+class IndexCache:
+    def __init__(self, target_path: Path) -> None:
+        """Cache of WheelFiles between runs."""
+        cache_file = target_path.joinpath(CACHE_FILE)
+        self.cache_file = cache_file
+        self.cache: Dict[str, Dict[str, Any]] = {}
+        if cache_file.exists():
+            self.cache = load_json_file(cache_file)
+
+    def write_to_new(self, target: Path) -> None:
+        """Write the cache to a new file."""
+        cache_file = target.joinpath(CACHE_FILE)
+        write_utf8_file(cache_file, json.dumps(self.cache))
+
+
 class IndexMaker:
     """Generate a simple repository of Python wheels."""
 
@@ -54,10 +69,7 @@ class IndexMaker:
         self.old_index = target_path.readlink() if target_path.exists() else None
         self.target_path_parent = target_path.parent
         self.projects: Dict[str, List[WheelFile]] = defaultdict(list)
-        cache_file = target_path.joinpath(CACHE_FILE)
-        self.cache: Dict[str, Dict[str, Any]] = {}
-        if cache_file.exists():
-            self.cache = load_json_file(cache_file)
+        self.cache = IndexCache(target_path)
 
     def make_index(self) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
         """Generate a simple repository of Python wheels."""
@@ -112,7 +124,7 @@ class IndexMaker:
             metadata_path = target_file.with_suffix(f"{target_file.suffix}.metadata")
             wheel_file_symlink_target = f"../{origin_name}/{wheel_path.name}"
             file_name_as_posix = target_file.relative_to(temp_dir_path).as_posix()
-            wheel_cache = cache.get(file_name_as_posix)
+            wheel_cache = cache.cache.get(file_name_as_posix)
             all_wheel_files.add(file_name_as_posix)
 
             if wheel_cache and wheel_cache["version"] == WHEEL_FILE_VERSION:
@@ -120,34 +132,30 @@ class IndexMaker:
                 previous_metadata_filename = target_path.joinpath(metadata_path.name)
                 canonical_name = wheel_file_obj.canonical_name
                 metadata_name = wheel_file_obj.metadata_name
-                canonical_name_to_metadata_name[canonical_name] = metadata_name
-                projects[metadata_name].append(wheel_file_obj)
                 copyfile(previous_metadata_filename, metadata_path)
-                os.symlink(wheel_file_symlink_target, target_file)
-                continue
+            else:
+                metadata_string = extract_metadata_from_wheel_file(wheel_path)
+                if not metadata_string:
+                    continue
+                wheel_metadata = metadata.loads(metadata_string)
+                metadata_path.write_text(metadata_string)
+                metadata_name = wheel_metadata["Name"]
+                canonical_name = canonicalize_name(metadata_name)
+                file_name_as_posix_to_metadata_path[file_name_as_posix] = metadata_path
+                wheel_file_obj = WheelFile(
+                    version=WHEEL_FILE_VERSION,
+                    metadata_name=metadata_name,
+                    canonical_name=canonical_name,
+                    filename=file_name_as_posix,
+                    wheel_hash=get_sha256_hash(wheel_path),
+                    requires_python=wheel_metadata.get("Requires-Python"),
+                    metadata_hash=get_sha256_hash(metadata_path),
+                )
+                new_wheel_file_objects.append(wheel_file_obj)
+                cache.cache[file_name_as_posix] = asdict(wheel_file_obj)
 
-            metadata_string = extract_metadata_from_wheel_file(wheel_path)
-            if not metadata_string:
-                continue
-            wheel_metadata = metadata.loads(metadata_string)
-
-            metadata_path.write_text(metadata_string)
-            metadata_name = wheel_metadata["Name"]
-            canonical_name = canonicalize_name(metadata_name)
-            file_name_as_posix_to_metadata_path[file_name_as_posix] = metadata_path
-            wheel_file_obj = WheelFile(
-                version=WHEEL_FILE_VERSION,
-                metadata_name=metadata_name,
-                canonical_name=canonical_name,
-                filename=file_name_as_posix,
-                wheel_hash=get_sha256_hash(wheel_path),
-                requires_python=wheel_metadata.get("Requires-Python"),
-                metadata_hash=get_sha256_hash(metadata_path),
-            )
-            new_wheel_file_objects.append(wheel_file_obj)
-            canonical_name_to_metadata_name[canonical_name] = metadata_name
             projects[metadata_name].append(wheel_file_obj)
-            cache[file_name_as_posix] = asdict(wheel_file_obj)
+            canonical_name_to_metadata_name[canonical_name] = metadata_name
             os.symlink(wheel_file_symlink_target, target_file)
 
         # Now fix all the metadata files and update the sha256 hash + cache
@@ -157,12 +165,12 @@ class IndexMaker:
 
             if repair_metadata_file(metadata_path, canonical_name_to_metadata_name):
                 wheel_file_obj.metadata_hash = get_sha256_hash(metadata_path)
-                cache[file_name_as_posix] = asdict(wheel_file_obj)
+                cache.cache[file_name_as_posix] = asdict(wheel_file_obj)
 
         # Remove any old wheel files from the cache
-        removed_wheels = set(cache.keys()) - all_wheel_files
+        removed_wheels = set(cache.cache.keys()) - all_wheel_files
         for old_wheel_file in removed_wheels:
-            del cache[old_wheel_file]
+            del cache.cache[old_wheel_file]
 
         index_content = str(generate_index(projects.keys()))
         write_utf8_file(temp_dir_path.joinpath("index.html"), index_content)
@@ -179,4 +187,4 @@ class IndexMaker:
 
             write_utf8_file(project_dir.joinpath("index.html"), str(project_index))
 
-        write_utf8_file(temp_dir_path.joinpath(CACHE_FILE), json.dumps(cache))
+        self.cache.write_to_new(temp_dir_path)
