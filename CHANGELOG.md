@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.2 (2023-06-01)
+### Fix
+
+* Load names from cache ([#2](https://github.com/bdraco/index-503/issues/2)) ([`ee2ccf7`](https://github.com/bdraco/index-503/commit/ee2ccf7c5eed26266ab33a5a81c8a9df6347ff2b))
+
 ## v0.1.1 (2023-06-01)
 ### Fix
 
