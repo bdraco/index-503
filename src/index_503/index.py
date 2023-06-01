@@ -70,6 +70,10 @@ class IndexMaker:
         self.target_path_parent = target_path.parent
         self.projects: Dict[str, List[WheelFile]] = defaultdict(list)
         self.cache = IndexCache(target_path)
+        self.all_wheel_files: set[str] = set()
+        self.canonical_name_to_metadata_name: Dict[str, str] = {}
+        self.new_wheel_file_objects: List[WheelFile] = []
+        self.file_name_as_posix_to_metadata_path: Dict[str, Path] = {}
 
     def make_index(self) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
         """Generate a simple repository of Python wheels."""
@@ -111,11 +115,12 @@ class IndexMaker:
         origin_name = self.origin_name
         projects = self.projects
         cache = self.cache
+        raw_cache = cache.cache
         target_path = self.target_path
-        all_wheel_files: set[str] = set()
-        canonical_name_to_metadata_name: Dict[str, str] = {}
-        new_wheel_file_objects: List[WheelFile] = []
-        file_name_as_posix_to_metadata_path: Dict[str, Path] = {}
+        all_wheel_files = self.all_wheel_files
+        canonical_name_to_metadata_name = self.canonical_name_to_metadata_name
+        new_wheel_file_objects = self.new_wheel_file_objects
+        file_name_as_posix_to_metadata_path = self.file_name_as_posix_to_metadata_path
 
         for wheel_file in glob.glob(str(origin_path.joinpath("*.whl"))):
             wheel_path = Path(wheel_file)
@@ -124,7 +129,7 @@ class IndexMaker:
             metadata_path = target_file.with_suffix(f"{target_file.suffix}.metadata")
             wheel_file_symlink_target = f"../{origin_name}/{wheel_path.name}"
             file_name_as_posix = target_file.relative_to(temp_dir_path).as_posix()
-            wheel_cache = cache.cache.get(file_name_as_posix)
+            wheel_cache = raw_cache.get(file_name_as_posix)
             all_wheel_files.add(file_name_as_posix)
 
             if wheel_cache and wheel_cache["version"] == WHEEL_FILE_VERSION:
@@ -138,7 +143,6 @@ class IndexMaker:
                 if not metadata_string:
                     continue
                 wheel_metadata = metadata.loads(metadata_string)
-                metadata_path.write_text(metadata_string)
                 metadata_name = wheel_metadata["Name"]
                 canonical_name = canonicalize_name(metadata_name)
                 file_name_as_posix_to_metadata_path[file_name_as_posix] = metadata_path
@@ -152,35 +156,33 @@ class IndexMaker:
                     metadata_hash=get_sha256_hash(metadata_path),
                 )
                 new_wheel_file_objects.append(wheel_file_obj)
-                cache.cache[file_name_as_posix] = asdict(wheel_file_obj)
+                raw_cache[file_name_as_posix] = asdict(wheel_file_obj)
+                metadata_path.write_text(metadata_string)
 
             projects[metadata_name].append(wheel_file_obj)
             canonical_name_to_metadata_name[canonical_name] = metadata_name
             os.symlink(wheel_file_symlink_target, target_file)
 
-        self.repair_metadata_files(
-            canonical_name_to_metadata_name,
-            file_name_as_posix_to_metadata_path,
-            new_wheel_file_objects,
-        )
-        self.remove_old_wheel_files(all_wheel_files, cache)
+        self.repair_metadata_files()
         self.generate_index_pages(temp_dir_path)
         self.cache.write_to_new(temp_dir_path)
 
-    def remove_old_wheel_files(
-        self, all_wheel_files: set[str], cache: IndexCache
-    ) -> None:
+    def remove_old_wheel_files(self) -> None:
         # Remove any old wheel files from the cache
-        removed_wheels = set(cache.cache.keys()) - all_wheel_files
+        all_wheel_files = self.all_wheel_files
+        cache = self.cache
+        raw_cache = cache.cache
+        removed_wheels = set(raw_cache.keys()) - all_wheel_files
         for old_wheel_file in removed_wheels:
-            del cache.cache[old_wheel_file]
+            del raw_cache[old_wheel_file]
 
     def repair_metadata_files(
         self,
-        canonical_name_to_metadata_name: Dict[str, str],
-        file_name_as_posix_to_metadata_path: Dict[str, Path],
-        new_wheel_file_objects: List[WheelFile],
     ) -> None:
+        """Repair the metadata files."""
+        canonical_name_to_metadata_name = self.canonical_name_to_metadata_name
+        file_name_as_posix_to_metadata_path = self.file_name_as_posix_to_metadata_path
+        new_wheel_file_objects = self.new_wheel_file_objects
         # Now fix all the metadata files and update the sha256 hash + cache
         for wheel_file_obj in new_wheel_file_objects:
             file_name_as_posix = wheel_file_obj.filename
