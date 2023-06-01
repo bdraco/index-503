@@ -149,13 +149,13 @@ def make_index(origin_path: Path) -> Tuple[Path, Dict[str, List["WheelFile"]]]:
 
             write_utf8_file(project_dir.joinpath("index.html"), str(project_index))
 
+        write_utf8_file(temp_dir_path.joinpath(CACHE_FILE), json.dumps(cache))
+
         final_name = target_path.parent / (target_path.name + "-" + temp_dir_path.name)
         final_build_name = final_name.parent / (final_name.name + "-build")
 
         # Rename the new index to the final name
-        os.rename(temp_dir, final_name)
-
-        write_utf8_file(final_name.joinpath(CACHE_FILE), json.dumps(cache))
+        os.rename(temp_dir_path, final_name)
 
         # Create a temporary symlink to the final name
         os.symlink(final_name, final_build_name)
