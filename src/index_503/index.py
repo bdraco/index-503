@@ -4,7 +4,7 @@ import os
 from collections import defaultdict
 from operator import attrgetter
 from pathlib import Path
-from shutil import copyfile, rmtree
+from shutil import rmtree
 from tempfile import mkdtemp
 from typing import Dict, List, Set
 
@@ -109,7 +109,7 @@ class IndexMaker:
             if (wheel_cache := raw_cache.get(wheel_file_name)) and (
                 wheel_file_obj := WheelFile.from_cache(wheel_cache)
             ):
-                copyfile(self.target_path.joinpath(metadata_path.name), metadata_path)
+                os.link(self.target_path.joinpath(metadata_path.name), metadata_path)
             elif wheel_file_obj := WheelFile.from_wheel(wheel_path, metadata_path):
                 wheel_file_name_to_metadata_path[wheel_file_name] = metadata_path
                 new_wheel_file_objects.append(wheel_file_obj)
