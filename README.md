@@ -52,6 +52,10 @@ For image builds
 For run time installs
 `pip3 install --no-cache-dir --dry-run --only-binary=:all: --extra-index-url "https://wheels.koston.org/musllinux-index/" -r requirements.txt`
 
+## Known issues
+
+If you see `Discarding https://wheels.koston.org/musllinux-index/intelhex-2.3.0-py2.py3-none-any.whl#sha256=87cc5225657524ec6361354be928adfd56bcf2a3dcc646c40f8f094c39c07db4 (from https://wheels.koston.org/musllinux-index/intelhex/): Requested IntelHex>=2.2.1 from https://wheels.koston.org/musllinux-index/intelhex-2.3.0-py2.py3-none-any.whl#sha256=87cc5225657524ec6361354be928adfd56bcf2a3dcc646c40f8f094c39c07db4 (from pymysensors==0.24.0->-r requirements_and.txt (line 1853)) has inconsistent Name: expected 'IntelHex', but metadata has 'intelhex'` upgrade pip as its fixed via https://github.com/pypa/pip/pull/12044
+
 ## Installation
 
 Install this via pip (or your favourite package manager):
