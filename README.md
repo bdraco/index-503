@@ -44,6 +44,14 @@ Running this again will replace the original index and delete the old index in a
 
 A lock will be held in the parent directory to prevent concurrent executions.
 
+## Example
+
+For image builds
+`pip3 install --no-cache-dir --dry-run --only-binary=:all: --index-url "https://wheels.koston.org/musllinux-index/" -r requirements.txt`
+
+For run time installs
+`pip3 install --no-cache-dir --dry-run --only-binary=:all: --extra-index-url "https://wheels.koston.org/musllinux-index/" -r requirements.txt`
+
 ## Installation
 
 Install this via pip (or your favourite package manager):
