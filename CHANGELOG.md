@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v2.1.1 (2023-06-02)
+### Fix
+
+* Remove unused code ([#46](https://github.com/bdraco/index-503/issues/46)) ([`a023b79`](https://github.com/bdraco/index-503/commit/a023b7964f6c8653614caf688c52fb978994d7dd))
+
 ## v2.1.0 (2023-06-01)
 ### Feature
 
