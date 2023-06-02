@@ -23,6 +23,9 @@ def test_wheel_file(tmp_path: Path) -> None:
     to_cache = wheel_file_obj.as_dict()
     assert WheelFile.from_cache(to_cache) == wheel_file_obj
 
+    to_cache["version"] = 0
+    assert WheelFile.from_cache(to_cache) is None
+
 
 def test_wheel_file_with_missing_metadata(tmp_path: Path) -> None:
     """Test WheelFile.from_wheel() with missing metadata"""
