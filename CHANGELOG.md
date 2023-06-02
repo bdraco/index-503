@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v2.3.1 (2023-06-02)
+### Fix
+
+* Document pip name compare problems ([#49](https://github.com/bdraco/index-503/issues/49)) ([`ea9e7d6`](https://github.com/bdraco/index-503/commit/ea9e7d638b70ab1dee1cea2eb61eac95cebbb890))
+
 ## v2.3.0 (2023-06-02)
 ### Feature
 
