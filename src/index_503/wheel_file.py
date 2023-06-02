@@ -95,8 +95,6 @@ class WheelFile:
 
         if self.requires_python is not None:
             kwargs["data-requires-python"] = escape(self.requires_python)
-        if self.metadata_hash is True:
-            kwargs["data-dist-info-metadata"] = "true"
         elif self.metadata_hash is not None:
             kwargs["data-dist-info-metadata"] = f"{HASH_FORMAT}={self.metadata_hash}"
 
