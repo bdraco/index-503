@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v2.3.0 (2023-06-02)
+### Feature
+
+* Add example pip usage to the docs ([#48](https://github.com/bdraco/index-503/issues/48)) ([`0910704`](https://github.com/bdraco/index-503/commit/0910704a46f4b7eaeec530469f021b3e8dcf955e))
+
 ## v2.2.0 (2023-06-02)
 ### Feature
 
