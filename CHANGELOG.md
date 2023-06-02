@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v2.2.0 (2023-06-02)
+### Feature
+
+* Speed up metadata creation when there is a cache ([#47](https://github.com/bdraco/index-503/issues/47)) ([`a33c45f`](https://github.com/bdraco/index-503/commit/a33c45f8d8dce9a0ba1d6e62194530f2b8a31de1))
+
 ## v2.1.1 (2023-06-02)
 ### Fix
 
