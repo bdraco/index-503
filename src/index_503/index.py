@@ -13,7 +13,6 @@ from yarl import URL
 
 from .cache import IndexCache
 from .file import write_utf8_file
-from .metadata import repair_metadata_file
 from .page_generator import generate_index, generate_project_page
 from .util import canonicalize_name, exclusive_lock
 from .wheel_file import WheelFile
@@ -124,30 +123,8 @@ class IndexMaker:
             os.symlink(wheel_file_symlink_target, target_file)
 
         self.cache.remove_stale_keys(all_wheel_files)
-        self.repair_metadata_files(
-            new_wheel_file_objects,
-            wheel_file_name_to_metadata_path,
-            canonical_name_to_metadata_name,
-        )
         self.generate_index_pages(temp_dir_path, projects)
         self.cache.write_to_new(temp_dir_path)
-
-    def repair_metadata_files(
-        self,
-        new_wheel_file_objects: List[WheelFile],
-        wheel_file_name_to_metadata_path: Dict[str, Path],
-        canonical_name_to_metadata_name: Dict[str, str],
-    ) -> None:
-        """Repair the metadata files."""
-        # Now fix all the metadata files and update the sha256 hash + cache
-        raw_cache = self.cache.cache
-        for wheel_file_obj in new_wheel_file_objects:
-            wheel_file_name = wheel_file_obj.filename
-            metadata_path = wheel_file_name_to_metadata_path[wheel_file_name]
-
-            if repair_metadata_file(metadata_path, canonical_name_to_metadata_name):
-                wheel_file_obj.update_metadata(metadata_path)
-                raw_cache[wheel_file_name] = wheel_file_obj.as_dict()
 
     def generate_index_pages(
         self, temp_dir_path: Path, projects: Dict[str, List[WheelFile]]
