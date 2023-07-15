@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "index-503"
-version = "2.3.1"
+version = "2.4.0"
 description = "PEP 503 index builder"
 authors = ["J. Nick Koston <nick@koston.org>"]
 license = "MIT"

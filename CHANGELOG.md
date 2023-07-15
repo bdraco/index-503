@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.4.0 (2023-07-15)
+
+### Feature
+
+* Remove pip workarounds ([#51](https://github.com/bdraco/index-503/issues/51)) ([`13853b1`](https://github.com/bdraco/index-503/commit/13853b1e4b335cddfd3ef1ef5336ce5ebfb5bd49))
+
 ## v2.3.1 (2023-06-02)
 ### Fix
 
