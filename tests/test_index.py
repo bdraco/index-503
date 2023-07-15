@@ -97,7 +97,7 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
                 "metadata_name": "bleak",
                 "wheel_hash": "be243ced0132b02d43738411d7e5f210fb536905a867d26c339085b4f976ddb2",
                 "requires_python": ">=3.7,<4.0",
-                "metadata_hash": "f87a0e8b780089a61d15f5df86a41fff555f3d61a10ec3a50b5b58ee1fa6342e",
+                "metadata_hash": "b826a4a16ef36e8a2165b16cec9b46d2956930a66046e977a499a418388e33d1",
             },
         }
 
@@ -116,4 +116,4 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
         )
         assert bleak_metadata_path.exists()
         bleak_metadata = bleak_metadata_path.read_text()
-        assert "Requires-Dist: typing_extensions" in bleak_metadata
+        assert "Requires-Dist: typing-extensions" in bleak_metadata
