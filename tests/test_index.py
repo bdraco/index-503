@@ -62,14 +62,22 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
         assert origin_path_index.joinpath(
             "CO2Signal-0.4.2-py3-none-any.whl.metadata"
         ).exists()
-        project_index_path = origin_path_index.joinpath("index.html")
+        project_index_path: Path = origin_path_index.joinpath("index.html")
         assert project_index_path.exists()
+        assert project_index_path.stat().st_mode & 0o0777 == 0o644
+        parent_path: Path = project_index_path.parent
+        assert parent_path.stat().st_mode & 0o0777 == 0o755
         project_index_html = project_index_path.read_text()
         assert "CO2Signal" in project_index_html
         assert "/co2signal/" in project_index_html
-        assert origin_path_index.joinpath("co2signal").exists()
-        co2signal_index_path = origin_path_index.joinpath("co2signal", "index.html")
+        co2_signal_path: Path = origin_path_index.joinpath("co2signal")
+        assert co2_signal_path.stat().st_mode & 0o0777 == 0o755
+        assert co2_signal_path.exists()
+        co2signal_index_path: Path = origin_path_index.joinpath(
+            "co2signal", "index.html"
+        )
         assert co2signal_index_path.exists()
+        assert co2signal_index_path.stat().st_mode & 0o0777 == 0o644
         print(json_cache_path.read_text())
         assert json.loads(json_cache_path.read_text()) == {
             "CO2Signal-0.4.2-py3-none-any.whl": {

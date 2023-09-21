@@ -57,6 +57,7 @@ class IndexMaker:
         try:
             self.cache.load()
             temp_dir_path = Path(temp_dir)
+            temp_dir_path.chmod(0o755)
 
             self._make_index_at_temp_dir(temp_dir_path)
             self._atomic_replace_old_index(temp_dir_path, target_path)
@@ -135,8 +136,8 @@ class IndexMaker:
         project_base_url = URL("../")
 
         for project_name, project_files in projects.items():
-            project_dir = temp_dir_path.joinpath(canonicalize_name(project_name))
-            project_dir.mkdir(exist_ok=True)
+            project_dir: Path = temp_dir_path.joinpath(canonicalize_name(project_name))
+            project_dir.mkdir(exist_ok=True, mode=0o755)
             project_index = generate_project_page(
                 project_name,
                 natsorted(project_files, key=attrgetter("filename"), reverse=True),
