@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.4.1 (2023-09-21)
+
+### Fix
+
+* Ensure index is always built with readable permissions ([#56](https://github.com/bdraco/index-503/issues/56)) ([`7884985`](https://github.com/bdraco/index-503/commit/78849859545d1278d877577abffd432a631a0ab0))
+
 ## v2.4.0 (2023-07-15)
 
 ### Feature
