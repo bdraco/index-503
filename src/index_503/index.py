@@ -14,7 +14,7 @@ from yarl import URL
 from .cache import IndexCache
 from .file import write_utf8_file
 from .page_generator import generate_index, generate_project_page
-from .util import canonicalize_name, exclusive_lock, get_mtime_and_size_from_path
+from .util import exclusive_lock, get_mtime_and_size_from_path
 from .wheel_file import WheelFile
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,7 +95,6 @@ class IndexMaker:
         projects: Dict[str, List[WheelFile]] = defaultdict(list)
         wheel_file_name_to_metadata_path: Dict[str, Path] = {}
         all_wheel_files: Set[str] = set()
-        canonical_name_to_metadata_name: Dict[str, str] = {}
         raw_cache = self.cache.cache
 
         for wheel_file in glob.glob(str(self.origin_path.joinpath("*.whl"))):
@@ -118,9 +117,7 @@ class IndexMaker:
                 continue
 
             canonical_name = wheel_file_obj.canonical_name
-            metadata_name = wheel_file_obj.metadata_name
-            projects[metadata_name].append(wheel_file_obj)
-            canonical_name_to_metadata_name[canonical_name] = metadata_name
+            projects[canonical_name].append(wheel_file_obj)
             os.link(wheel_path, target_file)
 
         self.cache.remove_stale_keys(all_wheel_files)
@@ -135,11 +132,11 @@ class IndexMaker:
         write_utf8_file(temp_dir_path.joinpath("index.html"), index_content)
         project_base_url = URL("../")
 
-        for project_name, project_files in projects.items():
-            project_dir: Path = temp_dir_path.joinpath(canonicalize_name(project_name))
+        for canonical_name, project_files in projects.items():
+            project_dir: Path = temp_dir_path.joinpath(canonical_name)
             project_dir.mkdir(exist_ok=True, mode=0o755)
             project_index = generate_project_page(
-                project_name,
+                canonical_name,
                 natsorted(project_files, key=attrgetter("filename"), reverse=True),
                 project_base_url,
             )
