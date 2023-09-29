@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.5.0 (2023-09-29)
+
+### Feature
+
+* Handle wheel files changing ([#58](https://github.com/bdraco/index-503/issues/58)) ([`183e27c`](https://github.com/bdraco/index-503/commit/183e27c82b29ef5d43ae8ddbf7b608a265f82cd3))
+
 ## v2.4.1 (2023-09-21)
 
 ### Fix
