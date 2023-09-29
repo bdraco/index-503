@@ -79,7 +79,7 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
         parent_path: Path = project_index_path.parent
         assert parent_path.stat().st_mode & 0o0777 == 0o755
         project_index_html = project_index_path.read_text()
-        assert "CO2Signal" in project_index_html
+        assert "co2signal" in project_index_html
         assert "/co2signal/" in project_index_html
         co2_signal_path: Path = origin_path_index.joinpath("co2signal")
         assert co2_signal_path.stat().st_mode & 0o0777 == 0o755
@@ -263,10 +263,14 @@ def test_make_index_with_name_change(tmp_path: Path) -> None:
         }
         alexapy_index_html = alexapy_index_path.read_text()
         assert (
-            "alexapy-1.27.0-py3-none-any.whl#sha256=a6dc55daac51d0f8f423b85cec346fd012b2f58a5b05493524a93156585c5110"
+            "alexapy-1.26.8-py3-none-any.whl#sha256=f17ac40d033ca869706f899fe0ab518c3c44459c951c7141d3be0117158c0fe2"
             in alexapy_index_html
         )
         assert (
-            'data-dist-info-metadata="sha256=a6e73c9cf4f9469c5b308830afbc000bb806df5d894598dd499737e94974c27c"'
+            "alexapy-1.26.9-py3-none-any.whl#sha256=dd4eed7a53f4932156ba779c73c5bd64286ee4d0f714028401e8f9acd9cd6afd"
+            in alexapy_index_html
+        )
+        assert (
+            "alexapy-1.27.0-py3-none-any.whl#sha256=a6dc55daac51d0f8f423b85cec346fd012b2f58a5b05493524a93156585c5110"
             in alexapy_index_html
         )
