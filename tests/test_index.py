@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from shutil import copyfile
 from typing import Tuple
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -19,15 +19,20 @@ TEST_WHEELS = (
 )
 
 
+def install_wheels(origin_path: Path) -> None:
+    """Install wheels for testing."""
+    for test_wheel in TEST_WHEELS:
+        fixture_wheel_path = FIXTURES.joinpath(test_wheel)
+        origin_wheel_path = origin_path.joinpath(test_wheel)
+        copyfile(fixture_wheel_path, origin_wheel_path)
+
+
 def setup_wheels(tmp_path: Path) -> Tuple[Path, Path]:
     """Setup wheels for testing."""
     origin_path = tmp_path.joinpath("musllinux")
     origin_path.mkdir()
 
-    for test_wheel in TEST_WHEELS:
-        fixture_wheel_path = FIXTURES.joinpath(test_wheel)
-        origin_wheel_path = origin_path.joinpath(test_wheel)
-        copyfile(fixture_wheel_path, origin_wheel_path)
+    install_wheels(origin_path)
 
     origin_path_index = tmp_path.joinpath("musllinux-index")
 
@@ -88,6 +93,8 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
                 "wheel_hash": "23976d5df4ac7b4b85210e4f334382d65b759a2c3795121f9688e64365ef4790",
                 "requires_python": None,
                 "metadata_hash": "a6e73c9cf4f9469c5b308830afbc000bb806df5d894598dd499737e94974c27c",
+                "mtime": ANY,
+                "size": 2841,
             },
             "typing_extensions-4.2.0-py3-none-any.whl": {
                 "version": WHEEL_FILE_VERSION,
@@ -97,6 +104,8 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
                 "wheel_hash": "6657594ee297170d19f67d55c05852a874e7eb634f4f753dbd667855e07c1708",
                 "requires_python": ">=3.7",
                 "metadata_hash": "dfeedfcc1c0d79841471fb3b186d85747256e14d425b50af2514fe2cf0c2ded9",
+                "mtime": ANY,
+                "size": 24207,
             },
             "bleak-0.17.0-py3-none-any.whl": {
                 "version": WHEEL_FILE_VERSION,
@@ -106,9 +115,10 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
                 "wheel_hash": "be243ced0132b02d43738411d7e5f210fb536905a867d26c339085b4f976ddb2",
                 "requires_python": ">=3.7,<4.0",
                 "metadata_hash": "b826a4a16ef36e8a2165b16cec9b46d2956930a66046e977a499a418388e33d1",
+                "mtime": ANY,
+                "size": 126632,
             },
         }
-
         co2signal_index_html = co2signal_index_path.read_text()
         assert (
             "CO2Signal-0.4.2-py3-none-any.whl#sha256=23976d5df4ac7b4b85210e4f334382d65b759a2c3795121f9688e64365ef4790"
@@ -125,3 +135,53 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
         assert bleak_metadata_path.exists()
         bleak_metadata = bleak_metadata_path.read_text()
         assert "Requires-Dist: typing-extensions" in bleak_metadata
+
+        # Now replace "CO2Signal-0.4.2-py3-none-any.whl" with a different wheel
+        fixture_wheel_path = FIXTURES.joinpath(
+            "replace_wheel", "CO2Signal-0.4.2-py3-none-any.whl"
+        )
+        origin_wheel_path = origin_path.joinpath("CO2Signal-0.4.2-py3-none-any.whl")
+        copyfile(fixture_wheel_path, origin_wheel_path)
+        assert make_index(origin_path) == origin_path_index
+        print(json_cache_path.read_text())
+        # The replacement CO2Signal-0.4.2-py3-none-any.whl wheel should have a different hash
+        # and mtime, but the metadata hash should be the same
+        assert json.loads(json_cache_path.read_text()) == {
+            "CO2Signal-0.4.2-py3-none-any.whl": {
+                "version": WHEEL_FILE_VERSION,
+                "canonical_name": "co2signal",
+                "filename": "CO2Signal-0.4.2-py3-none-any.whl",
+                "metadata_name": "CO2Signal",
+                "wheel_hash": "1efad0734066e28058e8a41d480284fad398d36c94f32fb456feca8d219e4fcf",
+                "requires_python": None,
+                "metadata_hash": "a6e73c9cf4f9469c5b308830afbc000bb806df5d894598dd499737e94974c27c",
+                "mtime": ANY,
+                "size": 3673,
+            },
+            "typing_extensions-4.2.0-py3-none-any.whl": {
+                "version": WHEEL_FILE_VERSION,
+                "canonical_name": "typing-extensions",
+                "filename": "typing_extensions-4.2.0-py3-none-any.whl",
+                "metadata_name": "typing_extensions",
+                "wheel_hash": "6657594ee297170d19f67d55c05852a874e7eb634f4f753dbd667855e07c1708",
+                "requires_python": ">=3.7",
+                "metadata_hash": "dfeedfcc1c0d79841471fb3b186d85747256e14d425b50af2514fe2cf0c2ded9",
+                "mtime": ANY,
+                "size": 24207,
+            },
+            "bleak-0.17.0-py3-none-any.whl": {
+                "version": WHEEL_FILE_VERSION,
+                "canonical_name": "bleak",
+                "filename": "bleak-0.17.0-py3-none-any.whl",
+                "metadata_name": "bleak",
+                "wheel_hash": "be243ced0132b02d43738411d7e5f210fb536905a867d26c339085b4f976ddb2",
+                "requires_python": ">=3.7,<4.0",
+                "metadata_hash": "b826a4a16ef36e8a2165b16cec9b46d2956930a66046e977a499a418388e33d1",
+                "mtime": ANY,
+                "size": 126632,
+            },
+        }
+        # Now put back the original wheels
+        # to make sure the next run will regenerate the index
+        # and hashes along with size
+        install_wheels(origin_path)

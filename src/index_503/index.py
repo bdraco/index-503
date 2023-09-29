@@ -14,7 +14,7 @@ from yarl import URL
 from .cache import IndexCache
 from .file import write_utf8_file
 from .page_generator import generate_index, generate_project_page
-from .util import canonicalize_name, exclusive_lock
+from .util import canonicalize_name, exclusive_lock, get_mtime_and_size_from_path
 from .wheel_file import WheelFile
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,10 +104,10 @@ class IndexMaker:
             all_wheel_files.add(wheel_file_name)
             target_file = temp_dir_path.joinpath(wheel_file_name)
             metadata_path = target_file.with_suffix(f"{target_file.suffix}.metadata")
-            wheel_file_symlink_target = f"../{self.origin_name}/{wheel_file_name}"
+            mtime, size = get_mtime_and_size_from_path(wheel_path)
 
             if (wheel_cache := raw_cache.get(wheel_file_name)) and (
-                wheel_file_obj := WheelFile.from_cache(wheel_cache)
+                wheel_file_obj := WheelFile.from_cache(wheel_cache, mtime, size)
             ):
                 os.link(self.target_path.joinpath(metadata_path.name), metadata_path)
             elif wheel_file_obj := WheelFile.from_wheel(wheel_path, metadata_path):
@@ -121,7 +121,7 @@ class IndexMaker:
             metadata_name = wheel_file_obj.metadata_name
             projects[metadata_name].append(wheel_file_obj)
             canonical_name_to_metadata_name[canonical_name] = metadata_name
-            os.symlink(wheel_file_symlink_target, target_file)
+            os.link(wheel_path, target_file)
 
         self.cache.remove_stale_keys(all_wheel_files)
         self.generate_index_pages(temp_dir_path, projects)
