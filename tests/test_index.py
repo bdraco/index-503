@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from shutil import copyfile
 from typing import Tuple
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -88,6 +88,8 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
                 "wheel_hash": "23976d5df4ac7b4b85210e4f334382d65b759a2c3795121f9688e64365ef4790",
                 "requires_python": None,
                 "metadata_hash": "a6e73c9cf4f9469c5b308830afbc000bb806df5d894598dd499737e94974c27c",
+                "mtime": ANY,
+                "size": 2841,
             },
             "typing_extensions-4.2.0-py3-none-any.whl": {
                 "version": WHEEL_FILE_VERSION,
@@ -97,6 +99,8 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
                 "wheel_hash": "6657594ee297170d19f67d55c05852a874e7eb634f4f753dbd667855e07c1708",
                 "requires_python": ">=3.7",
                 "metadata_hash": "dfeedfcc1c0d79841471fb3b186d85747256e14d425b50af2514fe2cf0c2ded9",
+                "mtime": ANY,
+                "size": 24207,
             },
             "bleak-0.17.0-py3-none-any.whl": {
                 "version": WHEEL_FILE_VERSION,
@@ -106,9 +110,10 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
                 "wheel_hash": "be243ced0132b02d43738411d7e5f210fb536905a867d26c339085b4f976ddb2",
                 "requires_python": ">=3.7,<4.0",
                 "metadata_hash": "b826a4a16ef36e8a2165b16cec9b46d2956930a66046e977a499a418388e33d1",
+                "mtime": ANY,
+                "size": 126632,
             },
         }
-
         co2signal_index_html = co2signal_index_path.read_text()
         assert (
             "CO2Signal-0.4.2-py3-none-any.whl#sha256=23976d5df4ac7b4b85210e4f334382d65b759a2c3795121f9688e64365ef4790"

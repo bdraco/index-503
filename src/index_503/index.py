@@ -121,8 +121,7 @@ class IndexMaker:
             metadata_name = wheel_file_obj.metadata_name
             projects[metadata_name].append(wheel_file_obj)
             canonical_name_to_metadata_name[canonical_name] = metadata_name
-            wheel_file_link_target = f"../{self.origin_name}/{wheel_file_name}"
-            os.link(wheel_file_link_target, target_file)
+            os.link(wheel_path, target_file)
 
         self.cache.remove_stale_keys(all_wheel_files)
         self.generate_index_pages(temp_dir_path, projects)
