@@ -5,7 +5,7 @@ import re
 from contextlib import contextmanager
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Dict, Generator
+from typing import Any, Dict, Generator, Tuple
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,6 +17,12 @@ def canonicalize_name(name: str) -> str:
     """Canonicalize a name."""
     # This is taken from PEP 503.
     return _canonicalize_regex.sub("-", name).lower()
+
+
+def get_mtime_and_size_from_path(path: Path) -> Tuple[float, int]:
+    """Get the mtime and size of a file."""
+    stat = path.stat()
+    return stat.st_mtime, stat.st_size
 
 
 def get_sha256_hash(filename: Path) -> str:

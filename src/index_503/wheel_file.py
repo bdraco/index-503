@@ -32,9 +32,9 @@ from typing_extensions import Literal
 from yarl import URL
 
 from .metadata import extract_metadata_from_wheel_file
-from .util import canonicalize_name, get_sha256_hash
+from .util import canonicalize_name, get_mtime_and_size_from_path, get_sha256_hash
 
-WHEEL_FILE_VERSION = 9
+WHEEL_FILE_VERSION = 10
 
 HASH_FORMAT = "sha256"
 
@@ -79,6 +79,10 @@ class WheelFile:
     :py:obj:`None` if the metadata file is not exposed.
     May be :py:obj:`True` if no hash is available.
     """
+    mtime: Optional[float] = None
+    """The mtime of the wheel file."""
+    size: Optional[int] = None
+    """The size of the wheel file."""
 
     def as_anchor(self, page: Airium, base_url: Union[str, URL] = "/") -> None:
         """
@@ -115,9 +119,15 @@ class WheelFile:
         return asdict(self)
 
     @classmethod
-    def from_cache(cls, cache_data: Dict[str, Any]) -> Optional["WheelFile"]:
+    def from_cache(
+        cls, cache_data: Dict[str, Any], mtime: float, size: int
+    ) -> Optional["WheelFile"]:
         """Create a :class:`~.WheelFile` from a cache entry."""
-        if cache_data["version"] != WHEEL_FILE_VERSION:
+        if (
+            cache_data["version"] != WHEEL_FILE_VERSION
+            or cache_data.get("size") != size
+            or cache_data.get("mtime") != mtime
+        ):
             return None
         return cls(**cache_data)
 
@@ -136,6 +146,7 @@ class WheelFile:
         wheel_file_name = wheel_path.name
         metadata_name = wheel_metadata["Name"]
         canonical_name = canonicalize_name(metadata_name)
+        mtime, size = get_mtime_and_size_from_path(wheel_path)
         return cls(
             version=WHEEL_FILE_VERSION,
             metadata_name=metadata_name,
@@ -144,4 +155,6 @@ class WheelFile:
             wheel_hash=get_sha256_hash(wheel_path),
             requires_python=wheel_metadata.get("Requires-Python"),
             metadata_hash=get_sha256_hash(metadata_path),
+            mtime=mtime,
+            size=size,
         )
