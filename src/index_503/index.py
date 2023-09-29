@@ -54,6 +54,7 @@ class IndexMaker:
         target_path = self.target_path
         old_index = target_path.readlink() if target_path.exists() else None
         temp_dir = mkdtemp(None, None, str(self.target_path.parent))
+        os.chmod(temp_dir, 0o755)
         try:
             self.cache.load()
             temp_dir_path = Path(temp_dir)
