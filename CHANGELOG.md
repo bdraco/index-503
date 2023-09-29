@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.5.1 (2023-09-29)
+
+### Fix
+
+* Canonicalize paths in the index ([#59](https://github.com/bdraco/index-503/issues/59)) ([`331d42a`](https://github.com/bdraco/index-503/commit/331d42af912e300815ff211aff387d8869c6faa5))
+
 ## v2.5.0 (2023-09-29)
 
 ### Feature
