@@ -33,7 +33,7 @@ consolekit = "^1.4.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0"
-pytest-cov = "^3.0"
+pytest-cov = ">=3,<7"
 
 [tool.poetry.group.docs]
 optional = true
