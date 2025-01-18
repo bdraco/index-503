@@ -2,10 +2,11 @@ import fcntl
 import json
 import logging
 import re
+from collections.abc import Generator
 from contextlib import contextmanager
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Dict, Generator, Tuple
+from typing import Any, Dict, Tuple
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ def canonicalize_name(name: str) -> str:
     return _canonicalize_regex.sub("-", name).lower()
 
 
-def get_mtime_and_size_from_path(path: Path) -> Tuple[float, int]:
+def get_mtime_and_size_from_path(path: Path) -> tuple[float, int]:
     """Get the mtime and size of a file."""
     stat = path.stat()
     return stat.st_mtime, stat.st_size
@@ -32,7 +33,7 @@ def get_sha256_hash(filename: Path) -> str:
         return sha256(bytes).hexdigest()
 
 
-def load_json_file(filename: Path) -> Dict[str, Dict[str, Any]]:
+def load_json_file(filename: Path) -> dict[str, dict[str, Any]]:
     """Get a json file."""
     with filename.open("rb") as f:
         bytes = f.read()  # read entire file as bytes

@@ -91,10 +91,10 @@ class IndexMaker:
 
     def _make_index_at_temp_dir(self, temp_dir_path: Path) -> None:
         """Generate a simple repository of Python wheels in a temp dir."""
-        new_wheel_file_objects: List[WheelFile] = []
-        projects: Dict[str, List[WheelFile]] = defaultdict(list)
-        wheel_file_name_to_metadata_path: Dict[str, Path] = {}
-        all_wheel_files: Set[str] = set()
+        new_wheel_file_objects: list[WheelFile] = []
+        projects: dict[str, list[WheelFile]] = defaultdict(list)
+        wheel_file_name_to_metadata_path: dict[str, Path] = {}
+        all_wheel_files: set[str] = set()
         raw_cache = self.cache.cache
 
         for wheel_file in glob.glob(str(self.origin_path.joinpath("*.whl"))):
@@ -125,7 +125,7 @@ class IndexMaker:
         self.cache.write_to_new(temp_dir_path)
 
     def generate_index_pages(
-        self, temp_dir_path: Path, projects: Dict[str, List[WheelFile]]
+        self, temp_dir_path: Path, projects: dict[str, list[WheelFile]]
     ) -> None:
         """Generate the index pages."""
         index_content = str(generate_index(projects.keys()))
