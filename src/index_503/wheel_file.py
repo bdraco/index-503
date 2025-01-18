@@ -24,7 +24,7 @@ import posixpath
 from dataclasses import asdict, dataclass
 from html import escape
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 from airium import Airium
 from dist_meta import metadata
@@ -114,13 +114,13 @@ class WheelFile:
 
         self.metadata_hash = get_sha256_hash(metadata_path)
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of this wheel file."""
         return asdict(self)
 
     @classmethod
     def from_cache(
-        cls, cache_data: Dict[str, Any], mtime: float, size: int
+        cls, cache_data: dict[str, Any], mtime: float, size: int
     ) -> Optional["WheelFile"]:
         """Create a :class:`~.WheelFile` from a cache entry."""
         if (

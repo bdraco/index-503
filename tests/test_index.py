@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 from shutil import copyfile
-from typing import Tuple
 from unittest.mock import ANY, patch
 
 import pytest
@@ -25,7 +24,7 @@ TEST_WHEELS_NAME_CHANGE = (
 )
 
 
-def install_wheels(origin_path: Path, files: Tuple[str, ...]) -> None:
+def install_wheels(origin_path: Path, files: tuple[str, ...]) -> None:
     """Install wheels for testing."""
     for test_wheel in files:
         fixture_wheel_path = FIXTURES.joinpath(test_wheel)
@@ -33,7 +32,7 @@ def install_wheels(origin_path: Path, files: Tuple[str, ...]) -> None:
         copyfile(fixture_wheel_path, origin_wheel_path)
 
 
-def setup_wheels(tmp_path: Path, files: Tuple[str, ...]) -> Tuple[Path, Path]:
+def setup_wheels(tmp_path: Path, files: tuple[str, ...]) -> tuple[Path, Path]:
     """Setup wheels for testing."""
     origin_path = tmp_path.joinpath("musllinux")
     origin_path.mkdir()
