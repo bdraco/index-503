@@ -159,20 +159,20 @@ files = [
 
 [[package]]
 name = "consolekit"
-version = "1.4.1"
+version = "1.7.2"
 description = "Additional utilities for click."
 optional = false
 python-versions = ">=3.6.1"
 files = [
-    {file = "consolekit-1.4.1-py3-none-any.whl", hash = "sha256:698dca1d1b712b76efc115922a8c8d679bf0d97cadb917404d5f68a1b3f300d7"},
-    {file = "consolekit-1.4.1.tar.gz", hash = "sha256:2009782cd118fcdf71231af452e791a8a6e1a260718bea2ee50ff193d4757ead"},
+    {file = "consolekit-1.7.2-py3-none-any.whl", hash = "sha256:7bb94b81a8aa1e20bef565eb49bb5b938c095abb9fd68644acebe2cd64859016"},
+    {file = "consolekit-1.7.2.tar.gz", hash = "sha256:dea6b9f250369eab8823df56f921844071e56f5051ac059d8a150e890626727b"},
 ]
 
 [package.dependencies]
 click = ">=7.1.2"
 colorama = {version = ">=0.4.3", markers = "python_version < \"3.10\" and platform_system == \"Windows\""}
 deprecation-alias = ">=0.1.1"
-domdf-python-tools = ">=2.6.0"
+domdf-python-tools = ">=3.8.0"
 mistletoe = ">=0.7.2"
 typing-extensions = ">=3.10.0.0,<3.10.0.1 || >3.10.0.1"
 
@@ -316,13 +316,13 @@ files = [
 
 [[package]]
 name = "domdf-python-tools"
-version = "3.6.1"
+version = "3.9.0"
 description = "Helpful functions for Python 🐍 🛠️"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "domdf_python_tools-3.6.1-py3-none-any.whl", hash = "sha256:e18158460850957f18e740eb94ede56f580ddb0cb162ab9d9834ed8bbb1b6431"},
-    {file = "domdf_python_tools-3.6.1.tar.gz", hash = "sha256:acc04563d23bce4d437dd08af6b9bea788328c412772a044d8ca428a7ad861be"},
+    {file = "domdf_python_tools-3.9.0-py3-none-any.whl", hash = "sha256:4e1ef365cbc24627d6d1e90cf7d46d8ab8df967e1237f4a26885f6986c78872e"},
+    {file = "domdf_python_tools-3.9.0.tar.gz", hash = "sha256:1f8a96971178333a55e083e35610d7688cd7620ad2b99790164e1fc1a3614c18"},
 ]
 
 [package.dependencies]
