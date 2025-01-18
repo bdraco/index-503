@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 from shutil import copyfile
-from typing import Tuple
 from unittest.mock import ANY, patch
 
 import pytest

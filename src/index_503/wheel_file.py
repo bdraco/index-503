@@ -24,7 +24,7 @@ import posixpath
 from dataclasses import asdict, dataclass
 from html import escape
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 from airium import Airium
 from dist_meta import metadata

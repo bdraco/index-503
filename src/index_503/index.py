@@ -6,7 +6,6 @@ from operator import attrgetter
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
-from typing import Dict, List, Set
 
 from natsort import natsorted
 from yarl import URL
