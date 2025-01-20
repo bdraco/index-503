@@ -32,7 +32,7 @@ dist-meta = "^0.8.0"
 consolekit = "^1.4.1"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.0"
+pytest = ">=7,<9"
 pytest-cov = ">=3,<7"
 
 [tool.poetry.group.docs]
