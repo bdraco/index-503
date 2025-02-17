@@ -309,13 +309,13 @@ packaging = ">=20.4"
 
 [[package]]
 name = "dist-meta"
-version = "0.8.1"
+version = "0.9.0"
 description = "Parse and create Python distribution metadata."
 optional = false
 python-versions = ">=3.6.1"
 files = [
-    {file = "dist-meta-0.8.1.tar.gz", hash = "sha256:e73b873b08361835e25592d4d74129f0353bca4451dd12bfa10aaf14af4682e4"},
-    {file = "dist_meta-0.8.1-py3-none-any.whl", hash = "sha256:e417192972dca8fb95076d8e29e2a3e0f0c5d16436b22f47b9824e538d27d900"},
+    {file = "dist_meta-0.9.0-py3-none-any.whl", hash = "sha256:1d38a7f5e83ab2fc5e1fb9af92d995ec27718377d000c7318367db85a2ba07db"},
+    {file = "dist_meta-0.9.0.tar.gz", hash = "sha256:fa16ebd5574744a09596ab342083a11d7209d8d05cf32891d1c985be7ec0cbd7"},
 ]
 
 [package.dependencies]
@@ -1353,4 +1353,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "7ee37a9f1f4992c40ab36053fe49011936891d866da0f9a4bccf0c7a42cefe11"
+content-hash = "23158b80d6ffae86bc1939988f69071fc1bbc36d5280f7089be9c875b165ab5e"
