@@ -10,17 +10,15 @@ concurrency:
   group: ${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-permissions: write-all
-
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - uses: pre-commit/action@v3.0.0
+      - uses: pre-commit/action@v3.0.1
 
   # Make sure commit messages follow the conventional commits convention:
   # https://www.conventionalcommits.org
@@ -28,10 +26,10 @@ jobs:
     name: Lint Commit Messages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v5.4.1
+      - uses: wagoid/commitlint-github-action@v6
 
   test:
     strategy:
@@ -52,39 +50,51 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: snok/install-poetry@v1.3.4
+      - uses: snok/install-poetry@v1
       - name: Install Dependencies
+        shell: bash
         run: poetry install
-        shell: bash
       - name: Test with Pytest
-        run: poetry run pytest --cov-report=xml
         shell: bash
+        run: poetry run pytest --cov-report=xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   release:
     runs-on: ubuntu-latest
     environment: release
+    if: github.ref == 'refs/heads/main'
     needs:
       - test
       - lint
       - commitlint
+    permissions:
+      id-token: write
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Release
-        uses: python-semantic-release/python-semantic-release@v7.34.6
-        if: github.ref_name == 'main'
+      # Run semantic release:
+      # - Update CHANGELOG.md
+      # - Update version in code
+      # - Create git tag
+      # - Create GitHub release
+      - name: Python Semantic Release
+        id: release
+        uses: python-semantic-release/python-semantic-release@v9.21.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          pypi_token: ${{ secrets.PYPI_TOKEN }}
-      - name: Test release
-        uses: python-semantic-release/python-semantic-release@v7.34.6
-        if: github.ref_name != 'main'
+      - name: Upload package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        if: steps.release.outputs.released == 'true'
+      - name: Upload Github Release Assets
+        uses: python-semantic-release/publish-action@v9.21.0
+        if: steps.release.outputs.released == 'true'
         with:
-          additional_options: --noop
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.tag }}
