@@ -187,14 +187,14 @@ markers = {main = "platform_system == \"Windows\"", dev = "sys_platform == \"win
 
 [[package]]
 name = "consolekit"
-version = "1.7.2"
+version = "1.8.1"
 description = "Additional utilities for click."
 optional = false
-python-versions = ">=3.6.1"
+python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "consolekit-1.7.2-py3-none-any.whl", hash = "sha256:7bb94b81a8aa1e20bef565eb49bb5b938c095abb9fd68644acebe2cd64859016"},
-    {file = "consolekit-1.7.2.tar.gz", hash = "sha256:dea6b9f250369eab8823df56f921844071e56f5051ac059d8a150e890626727b"},
+    {file = "consolekit-1.8.1-py3-none-any.whl", hash = "sha256:6d6dc1e30e71ae09f92f097a9240130c04f2882d5fda55e6cff44843e6565753"},
+    {file = "consolekit-1.8.1.tar.gz", hash = "sha256:60f55f6740b8166cf7a23da9a0f24fcb630c2313e46a04f9d51bdf7be0237a68"},
 ]
 
 [package.dependencies]
