@@ -15,7 +15,7 @@ This produces a sibling directory `musllinux-index/` containing:
 
 - A top-level `index.html` listing every project found.
 - A per-project `<name>/index.html` listing every wheel for that project.
-- A `<wheel>.metadata` sidecar for every wheel (see *Generated metadata* below).
+- A `<wheel>.metadata` sidecar for every wheel (see _Generated metadata_ below).
 - A `cache.json` used to skip unchanged wheels on subsequent runs.
 
 The wheels themselves are exposed via a symlink, so the original wheel

@@ -141,9 +141,7 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
 
         # Regression: a wheel that declares Requires-Python must still
         # advertise its PEP-658 / PEP-714 metadata sidecar.
-        bleak_index_html = origin_path_index.joinpath(
-            "bleak", "index.html"
-        ).read_text()
+        bleak_index_html = origin_path_index.joinpath("bleak", "index.html").read_text()
         assert 'data-requires-python="&gt;=3.7,&lt;4.0"' in bleak_index_html
         assert (
             'data-dist-info-metadata="sha256=b826a4a16ef36e8a2165b16cec9b46d2956930a66046e977a499a418388e33d1"'
