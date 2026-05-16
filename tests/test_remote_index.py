@@ -1,4 +1,5 @@
 """Tests for the remote PEP 503 index fetcher and the merge integration."""
+
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -183,9 +184,7 @@ def test_make_index_merges_remote_only_wheels(tmp_path: Path) -> None:
 
     # typing-extensions has only a local wheel with the same filename as remote,
     # so the project page must not contain the remote hash.
-    te_page = origin_path_index.joinpath(
-        "typing-extensions", "index.html"
-    ).read_text()
+    te_page = origin_path_index.joinpath("typing-extensions", "index.html").read_text()
     assert "remote-te-hash" not in te_page
 
 
