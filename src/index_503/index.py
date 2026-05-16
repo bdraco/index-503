@@ -46,9 +46,7 @@ def make_index(origin_path: Path, merge_with: Optional[str] = None) -> Path:
 class IndexMaker:
     """Generate a simple repository of Python wheels."""
 
-    def __init__(
-        self, origin_path: Path, merge_with: Optional[str] = None
-    ) -> None:
+    def __init__(self, origin_path: Path, merge_with: Optional[str] = None) -> None:
         """Generate a simple repository of Python wheels."""
         self.origin_path = origin_path
         self.origin_name = origin_path.name
@@ -143,7 +141,8 @@ class IndexMaker:
         extras: dict[str, list[RemoteEntry]] = {}
         for canonical_name, entries in remote.items():
             filtered = [
-                entry for entry in entries
+                entry
+                for entry in entries
                 if entry.filename not in local_wheel_filenames
             ]
             if filtered:

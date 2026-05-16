@@ -1,4 +1,5 @@
 """Fetch and parse remote PEP 503 simple indexes for merging."""
+
 import logging
 from dataclasses import dataclass
 from html import escape
