@@ -99,8 +99,14 @@ class WheelFile:
 
         if self.requires_python is not None:
             kwargs["data-requires-python"] = escape(self.requires_python)
-        elif self.metadata_hash is not None:
-            kwargs["data-dist-info-metadata"] = f"{HASH_FORMAT}={self.metadata_hash}"
+        if self.metadata_hash is not None:
+            metadata_value = (
+                "true"
+                if self.metadata_hash is True
+                else f"{HASH_FORMAT}={self.metadata_hash}"
+            )
+            kwargs["data-core-metadata"] = metadata_value
+            kwargs["data-dist-info-metadata"] = metadata_value
 
         with page.a(**kwargs):
             page(posixpath.basename(self.filename))
