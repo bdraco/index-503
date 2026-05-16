@@ -133,6 +133,24 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
             'data-dist-info-metadata="sha256=a6e73c9cf4f9469c5b308830afbc000bb806df5d894598dd499737e94974c27c"'
             in co2signal_index_html
         )
+        # PEP-714 alias for the same metadata hash.
+        assert (
+            'data-core-metadata="sha256=a6e73c9cf4f9469c5b308830afbc000bb806df5d894598dd499737e94974c27c"'
+            in co2signal_index_html
+        )
+
+        # Regression: a wheel that declares Requires-Python must still
+        # advertise its PEP-658 / PEP-714 metadata sidecar.
+        bleak_index_html = origin_path_index.joinpath("bleak", "index.html").read_text()
+        assert 'data-requires-python="&gt;=3.7,&lt;4.0"' in bleak_index_html
+        assert (
+            'data-dist-info-metadata="sha256=b826a4a16ef36e8a2165b16cec9b46d2956930a66046e977a499a418388e33d1"'
+            in bleak_index_html
+        )
+        assert (
+            'data-core-metadata="sha256=b826a4a16ef36e8a2165b16cec9b46d2956930a66046e977a499a418388e33d1"'
+            in bleak_index_html
+        )
 
         bleak_metadata_path = origin_path_index.joinpath(
             "bleak-0.17.0-py3-none-any.whl.metadata"

@@ -44,6 +44,16 @@ Running this again will replace the original index and delete the old index in a
 
 A lock will be held in the parent directory to prevent concurrent executions.
 
+## Features
+
+- **PEP 503** simple repository layout (per-project `index.html` pages).
+- **PEP 658 / PEP 714** core metadata sidecars: each wheel gets a `<wheel>.metadata`
+  file alongside it, and the anchor tag advertises it via both `data-core-metadata`
+  (PEP 714) and `data-dist-info-metadata` (PEP 658) so installers like pip can
+  fetch dependency metadata without downloading the wheel.
+- Wheel `Requires-Python` is exposed via `data-requires-python`.
+- Cache (`cache.json`) avoids re-reading unchanged wheels on subsequent runs.
+
 ## Example
 
 For image builds
