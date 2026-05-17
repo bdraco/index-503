@@ -44,6 +44,26 @@ def setup_wheels(tmp_path: Path, files: tuple[str, ...]) -> tuple[Path, Path]:
     return origin_path, origin_path_index
 
 
+def test_make_index_skips_corrupt_wheel(tmp_path: Path) -> None:
+    """A corrupt wheel does not abort the index; valid wheels are still indexed."""
+    origin_path, origin_path_index = setup_wheels(tmp_path, TEST_WHEELS)
+    # Drop a corrupt wheel with a well-formed PEP-427 filename alongside.
+    origin_path.joinpath("brokenpkg-1.0-py3-none-any.whl").write_bytes(b"not a zip")
+
+    assert make_index(origin_path) == origin_path_index
+
+    # The good wheel is still indexed.
+    assert origin_path_index.joinpath(
+        "CO2Signal-0.4.2-py3-none-any.whl.metadata"
+    ).exists()
+    # The corrupt wheel was skipped — no metadata file produced for it.
+    assert not origin_path_index.joinpath(
+        "brokenpkg-1.0-py3-none-any.whl.metadata"
+    ).exists()
+    # And it must not have its own project page.
+    assert not origin_path_index.joinpath("brokenpkg").exists()
+
+
 def test_make_index_fails(tmp_path: Path) -> None:
     """Test make index cleans up on failure."""
     origin_path, _ = setup_wheels(tmp_path, TEST_WHEELS)
