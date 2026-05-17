@@ -71,7 +71,7 @@ class _AnchorParser(HTMLParser):
 def _fetch(url: str, timeout: int) -> str:
     """Fetch a URL and return the decoded body."""
     request = Request(url, headers={"User-Agent": _USER_AGENT, "Accept": "text/html"})
-    with urlopen(request, timeout=timeout) as response:  # noqa: S310
+    with urlopen(request, timeout=timeout) as response:  # noqa: S310  # nosec B310
         charset = response.headers.get_content_charset() or "utf-8"
         return response.read().decode(charset, errors="replace")
 

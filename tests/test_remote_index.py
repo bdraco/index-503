@@ -13,7 +13,6 @@ from index_503.remote_index import (
     fetch_remote_index,
 )
 
-from . import FIXTURES
 from .test_index import setup_wheels
 
 TEST_WHEELS = (
