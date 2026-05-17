@@ -83,12 +83,16 @@ def test_make_index_fails_partial_replace(tmp_path: Path) -> None:
         make_index(origin_path)
 
     # Orphan dir survives the failed run...
-    orphans = [p for p in parent_dir.iterdir() if p.name.startswith("musllinux-index-tmp")]
+    orphans = [
+        p for p in parent_dir.iterdir() if p.name.startswith("musllinux-index-tmp")
+    ]
     assert len(orphans) == 1
 
     # ...but the next successful run cleans it up.
     assert make_index(origin_path) == target_path
-    leftover = [p for p in parent_dir.iterdir() if p.name.startswith("musllinux-index-tmp")]
+    leftover = [
+        p for p in parent_dir.iterdir() if p.name.startswith("musllinux-index-tmp")
+    ]
     # Exactly one survives — the live target the symlink points at.
     assert len(leftover) == 1
     assert leftover[0].name == target_path.readlink().name
