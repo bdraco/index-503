@@ -1,3 +1,5 @@
+from typing import Any
+
 from index_503.json_generator import (
     API_VERSION,
     generate_index_json,
@@ -6,8 +8,8 @@ from index_503.json_generator import (
 from index_503.wheel_file import WHEEL_FILE_VERSION, WheelFile
 
 
-def _wheel(**overrides) -> WheelFile:
-    base = dict(
+def _wheel(**overrides: Any) -> WheelFile:
+    base: dict[str, Any] = dict(
         version=WHEEL_FILE_VERSION,
         canonical_name="example",
         filename="example-1.0-py3-none-any.whl",
