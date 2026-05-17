@@ -69,8 +69,6 @@ def test_make_index_fails_partial_replace(tmp_path: Path) -> None:
     origin_path, target_path = setup_wheels(tmp_path, TEST_WHEELS)
     parent_dir = origin_path.parent
 
-    original = IndexMaker._atomic_replace_old_index
-
     def rename_then_fail(self: IndexMaker, temp_dir_path: Path, t: Path) -> None:
         # Mimic a partial run: rename succeeds, then we blow up.
         final_name = t.parent / (t.name + "-" + temp_dir_path.name)
