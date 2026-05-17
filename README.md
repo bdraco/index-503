@@ -52,6 +52,22 @@ For image builds
 For run time installs
 `pip3 install --no-cache-dir --dry-run --only-binary=:all: --extra-index-url "https://wheels.koston.org/musllinux-index/" -r requirements.txt`
 
+## PEP 691 JSON Simple Repository API
+
+Each generated directory contains both `index.html` (PEP 503 HTML) and
+`index.v1_json` (PEP 691 JSON, media type
+`application/vnd.pypi.simple.v1+json`). Configure your web server to do
+content negotiation on the `Accept` header so pip 22.0+ clients receive
+the JSON variant, e.g. for nginx:
+
+```nginx
+location ~ ^(.*/)index\.html$ {
+    if ($http_accept ~* "application/vnd\.pypi\.simple\.v1\+json") {
+        rewrite ^(.*)/index\.html$ $1/index.v1_json last;
+    }
+}
+```
+
 ## Known issues
 
 This only works with pip 23.2 or later due to https://github.com/pypa/pip/issues/12038

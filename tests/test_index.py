@@ -6,6 +6,7 @@ from unittest.mock import ANY, patch
 import pytest
 
 from index_503.index import make_index
+from index_503.json_generator import API_VERSION, JSON_INDEX_FILENAME
 from index_503.wheel_file import WHEEL_FILE_VERSION
 
 from . import FIXTURES
@@ -190,6 +191,45 @@ def test_make_index_end_to_end(tmp_path: Path) -> None:
         # to make sure the next run will regenerate the index
         # and hashes along with size
         install_wheels(origin_path, TEST_WHEELS)
+
+
+def test_make_index_writes_pep691_json(tmp_path: Path) -> None:
+    """``make_index`` writes ``index.v1_json`` PEP 691 payloads."""
+    origin_path, origin_path_index = setup_wheels(tmp_path, TEST_WHEELS)
+    make_index(origin_path)
+
+    root_json_path = origin_path_index.joinpath(JSON_INDEX_FILENAME)
+    assert root_json_path.exists()
+    assert root_json_path.stat().st_mode & 0o0777 == 0o644
+    root_payload = json.loads(root_json_path.read_text())
+    assert root_payload["meta"] == {"api-version": API_VERSION}
+    project_names = {p["name"] for p in root_payload["projects"]}
+    # sphinxcontrib.applehelp's fixture has no METADATA and is skipped.
+    assert project_names == {"bleak", "co2signal", "typing-extensions"}
+
+    co2_json_path = origin_path_index.joinpath("co2signal", JSON_INDEX_FILENAME)
+    assert co2_json_path.exists()
+    co2_payload = json.loads(co2_json_path.read_text())
+    assert co2_payload["meta"] == {"api-version": API_VERSION}
+    assert co2_payload["name"] == "co2signal"
+    [co2_file] = co2_payload["files"]
+    assert co2_file["filename"] == "CO2Signal-0.4.2-py3-none-any.whl"
+    assert co2_file["url"] == "../CO2Signal-0.4.2-py3-none-any.whl"
+    assert co2_file["hashes"] == {
+        "sha256": "23976d5df4ac7b4b85210e4f334382d65b759a2c3795121f9688e64365ef4790"
+    }
+    assert co2_file["core-metadata"] == {
+        "sha256": "a6e73c9cf4f9469c5b308830afbc000bb806df5d894598dd499737e94974c27c"
+    }
+    assert co2_file["size"] == 2841
+    # CO2Signal has no Requires-Python in this fixture.
+    assert "requires-python" not in co2_file
+
+    bleak_payload = json.loads(
+        origin_path_index.joinpath("bleak", JSON_INDEX_FILENAME).read_text()
+    )
+    [bleak_file] = bleak_payload["files"]
+    assert bleak_file["requires-python"] == ">=3.7,<4.0"
 
 
 def test_make_index_with_name_change(tmp_path: Path) -> None:
