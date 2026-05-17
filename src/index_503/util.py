@@ -33,8 +33,8 @@ def get_sha256_hash(filename: Path) -> str:
         return sha256(bytes).hexdigest()
 
 
-def load_json_file(filename: Path) -> dict[str, dict[str, Any]]:
-    """Get a json file."""
+def load_json_file(filename: Path) -> Any:
+    """Get a json file. Returns whatever the JSON decodes to."""
     with filename.open("rb") as f:
         bytes = f.read()  # read entire file as bytes
         return json.loads(bytes)
