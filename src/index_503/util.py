@@ -26,11 +26,20 @@ def get_mtime_and_size_from_path(path: Path) -> tuple[float, int]:
     return stat.st_mtime, stat.st_size
 
 
+_HASH_CHUNK_SIZE = 1024 * 1024
+
+
 def get_sha256_hash(filename: Path) -> str:
-    """Get SHA256 hash of a file."""
+    """Get SHA256 hash of a file.
+
+    Streams the file in chunks to avoid loading large wheels entirely
+    into memory.
+    """
+    hasher = sha256()
     with filename.open("rb") as f:
-        bytes = f.read()  # read entire file as bytes
-        return sha256(bytes).hexdigest()
+        for chunk in iter(lambda: f.read(_HASH_CHUNK_SIZE), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
 
 
 def load_json_file(filename: Path) -> dict[str, dict[str, Any]]:
