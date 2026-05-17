@@ -27,8 +27,7 @@ def generate_index_json(projects: Iterable[str]) -> dict[str, Any]:
     return {
         "meta": {"api-version": API_VERSION},
         "projects": [
-            {"name": canonicalize_name(p)}
-            for p in natsorted(projects, key=str.lower)
+            {"name": canonicalize_name(p)} for p in natsorted(projects, key=str.lower)
         ],
     }
 
