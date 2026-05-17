@@ -5,6 +5,7 @@ from airium import Airium
 from natsort import natsorted
 from yarl import URL
 
+from .remote_index import RemoteEntry
 from .util import canonicalize_name
 from .wheel_file import WheelFile
 
@@ -40,7 +41,10 @@ def generate_index(projects: Iterable[str]) -> Airium:
 
 
 def generate_project_page(
-    name: str, files: Iterable[WheelFile], base_url: Union[str, URL] = "/"
+    name: str,
+    files: Iterable[WheelFile],
+    base_url: Union[str, URL] = "/",
+    extra_entries: Iterable[RemoteEntry] = (),
 ) -> Airium:
     """
     Generate the repository page for a project.
@@ -49,6 +53,9 @@ def generate_project_page(
     :param files: An iterable of files for the project, which will be linked to from the index page.
     :param base_url: The base URL of the Python package repository.
         For example, with PyPI's URL, a URL of /foo/ would be https://pypi.org/simple/foo/.
+    :param extra_entries: Additional anchor entries (e.g. fetched from a remote
+        index when merging) to append below the local wheel anchors. Their
+        ``href`` values are emitted verbatim, so they must already be absolute.
     """
 
     name = canonicalize_name(name)
@@ -68,6 +75,10 @@ def generate_project_page(
 
             for wheel_file in files:
                 wheel_file.as_anchor(page, base_url)
+                page.br()
+
+            for entry in extra_entries:
+                entry.as_anchor(page)
                 page.br()
 
     return page
