@@ -6,6 +6,7 @@ from operator import attrgetter
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
+from typing import Optional
 
 from natsort import natsorted
 from yarl import URL
@@ -52,6 +53,7 @@ class IndexMaker:
         """Generate a simple repository of Python wheels."""
         target_path = self.target_path
         old_index = target_path.readlink() if target_path.exists() else None
+        self._cleanup_orphan_build_dirs(old_index)
         temp_dir = mkdtemp(None, None, str(self.target_path.parent))
         try:
             self.cache.load()
@@ -68,8 +70,33 @@ class IndexMaker:
             return target_path
         except Exception:
             _LOGGER.exception("Error generating index")
-            rmtree(temp_dir)
+            # Use ignore_errors so a partial _atomic_replace_old_index (which
+            # already renamed temp_dir) doesn't mask the original exception.
+            # Any leftover dirs are cleaned up on the next run.
+            rmtree(temp_dir, ignore_errors=True)
             raise
+
+    def _cleanup_orphan_build_dirs(self, current_target: Optional[Path]) -> None:
+        """Remove build directories left behind by crashed previous runs.
+
+        The atomic-replace flow renames temp dirs to ``<target>-tmpXXXX`` and
+        briefly creates ``<target>-tmpXXXX-build`` symlinks. A crash between
+        steps leaves these in place forever; clean them up at startup while we
+        hold the lock.
+        """
+        parent = self.target_path.parent
+        prefix = f"{self.target_path.name}-tmp"
+        keep_name = current_target.name if current_target is not None else None
+        for entry in parent.iterdir():
+            if not entry.name.startswith(prefix):
+                continue
+            if entry.name == keep_name:
+                continue
+            _LOGGER.warning("Removing orphan build artifact: %s", entry)
+            if entry.is_symlink() or not entry.is_dir():
+                entry.unlink()
+            else:
+                rmtree(entry, ignore_errors=True)
 
     def _atomic_replace_old_index(self, temp_dir_path: Path, target_path: Path) -> None:
         """Atomically replace the old index with the new one."""
