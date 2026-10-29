@@ -80,9 +80,16 @@ class IndexMaker:
         # Rename the new index to the final name
         os.rename(temp_dir_path, final_name)
 
-        _LOGGER.debug("Symlinking %s with %s", final_name, final_build_name)
+        # Relative path name for symlink target
+        final_realpath = os.path.realpath(final_name)
+        final_build_realpath = os.path.realpath(final_build_name)
+        final_build_realpath_dirname = os.path.dirname(final_build_realpath)
+        final_relpath = os.path.relpath(final_realpath, final_build_realpath_dirname)
+        _LOGGER.debug("Relative %s as %s", final_name, final_relpath)
+
+        _LOGGER.debug("Symlinking %s as %s", final_relpath, final_build_name)
         # Create a temporary symlink to the final name
-        os.symlink(final_name, final_build_name)
+        os.symlink(final_relpath, final_build_name)
 
         _LOGGER.debug("Replacing %s with %s", final_build_name, target_path)
         # Finally replace the live index with the new one
