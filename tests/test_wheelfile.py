@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import ANY
+from unittest.mock import ANY, patch
 
 from index_503.util import get_mtime_and_size_from_path
 from index_503.wheel_file import WHEEL_FILE_VERSION, WheelFile
@@ -41,3 +41,26 @@ def test_wheel_file_with_missing_metadata(tmp_path: Path) -> None:
     wheel_path = FIXTURES.joinpath("sphinxcontrib.applehelp-1.0.3-py3-none-any.whl")
     wheel_file_obj = WheelFile.from_wheel(wheel_path, metadata_path)
     assert wheel_file_obj is None
+
+
+def test_wheel_file_metadata_written_as_utf8(tmp_path: Path) -> None:
+    """METADATA with non-ASCII content must be written as UTF-8 regardless of locale."""
+    metadata_path = tmp_path.joinpath("metadata")
+    wheel_path = FIXTURES.joinpath("CO2Signal-0.4.2-py3-none-any.whl")
+    # Simulate METADATA carrying non-ASCII characters (author names, descriptions).
+    fake_metadata = (
+        "Metadata-Version: 2.1\n"
+        "Name: CO2Signal\n"
+        "Version: 0.4.2\n"
+        "Author: Héllo Wörld\n"
+        "\n"
+        "Description with em dash — and curly quotes “like this”.\n"
+    )
+    with patch(
+        "index_503.wheel_file.extract_metadata_from_wheel_file",
+        return_value=fake_metadata,
+    ):
+        wheel_file_obj = WheelFile.from_wheel(wheel_path, metadata_path)
+    assert wheel_file_obj is not None
+    # Reading the bytes back as UTF-8 must round-trip cleanly.
+    assert metadata_path.read_bytes() == fake_metadata.encode("utf-8")
