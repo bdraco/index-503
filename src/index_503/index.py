@@ -2,6 +2,7 @@ import glob
 import logging
 import os
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from operator import attrgetter
 from pathlib import Path
 from shutil import rmtree
@@ -90,11 +91,10 @@ class IndexMaker:
 
     def _make_index_at_temp_dir(self, temp_dir_path: Path) -> None:
         """Generate a simple repository of Python wheels in a temp dir."""
-        new_wheel_file_objects: list[WheelFile] = []
         projects: dict[str, list[WheelFile]] = defaultdict(list)
-        wheel_file_name_to_metadata_path: dict[str, Path] = {}
         all_wheel_files: set[str] = set()
         raw_cache = self.cache.cache
+        misses: list[tuple[Path, Path, Path]] = []
 
         for wheel_file in glob.glob(str(self.origin_path.joinpath("*.whl"))):
             wheel_path = Path(wheel_file)
@@ -108,16 +108,25 @@ class IndexMaker:
                 wheel_file_obj := WheelFile.from_cache(wheel_cache, mtime, size)
             ):
                 os.link(self.target_path.joinpath(metadata_path.name), metadata_path)
-            elif wheel_file_obj := WheelFile.from_wheel(wheel_path, metadata_path):
-                wheel_file_name_to_metadata_path[wheel_file_name] = metadata_path
-                new_wheel_file_objects.append(wheel_file_obj)
-                raw_cache[wheel_file_name] = wheel_file_obj.as_dict()
+                projects[wheel_file_obj.canonical_name].append(wheel_file_obj)
+                os.link(wheel_path, target_file)
             else:
-                continue
+                misses.append((wheel_path, target_file, metadata_path))
 
-            canonical_name = wheel_file_obj.canonical_name
-            projects[canonical_name].append(wheel_file_obj)
-            os.link(wheel_path, target_file)
+        if misses:
+            # from_wheel is I/O- and hash-bound (both release the GIL); each
+            # task writes only to its own metadata_path, so threads are safe.
+            with ThreadPoolExecutor() as executor:
+                results = executor.map(
+                    lambda args: (args, WheelFile.from_wheel(args[0], args[2])),
+                    misses,
+                )
+                for (wheel_path, target_file, _), wheel_file_obj in results:
+                    if wheel_file_obj is None:
+                        continue
+                    raw_cache[wheel_path.name] = wheel_file_obj.as_dict()
+                    projects[wheel_file_obj.canonical_name].append(wheel_file_obj)
+                    os.link(wheel_path, target_file)
 
         self.cache.remove_stale_keys(all_wheel_files)
         self.generate_index_pages(temp_dir_path, projects)
