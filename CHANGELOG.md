@@ -2,6 +2,120 @@
 
 <!-- version list -->
 
+## v2.6.1 (2026-11-04)
+
+### Bug Fixes
+
+- Limit main release workflow to non-forks ([#146](https://github.com/bdraco/index-503/pull/146),
+  [`bf919e7`](https://github.com/bdraco/index-503/commit/bf919e7467cb9889f78a2253f5780f0ac3a049b4))
+
+### Chores
+
+- **deps**: Bump airium from 0.2.6 to 0.2.7 ([#109](https://github.com/bdraco/index-503/pull/109),
+  [`43bdd34`](https://github.com/bdraco/index-503/commit/43bdd34016d1eb02b4d437229b07cc426dff970d))
+
+- **deps**: Bump consolekit from 1.7.2 to 1.8.1
+  ([#101](https://github.com/bdraco/index-503/pull/101),
+  [`6072aea`](https://github.com/bdraco/index-503/commit/6072aea035aaae0314be21468c466f86514d2e43))
+
+- **deps**: Bump consolekit from 1.8.1 to 1.9.0
+  ([#105](https://github.com/bdraco/index-503/pull/105),
+  [`49b54a9`](https://github.com/bdraco/index-503/commit/49b54a9b5494201c9177f4194e8cd3b381504362))
+
+- **deps**: Bump consolekit from 1.9.0 to 1.12.0
+  ([#126](https://github.com/bdraco/index-503/pull/126),
+  [`fda8782`](https://github.com/bdraco/index-503/commit/fda878209110343d8a30cf9aef6b656c189ff9e8))
+
+- **deps**: Bump yarl from 1.18.3 to 1.19.0 ([#95](https://github.com/bdraco/index-503/pull/95),
+  [`507d49e`](https://github.com/bdraco/index-503/commit/507d49e1942146f6b164d8fb8f73a45610bcf3eb))
+
+- **deps**: Bump yarl from 1.19.0 to 1.20.0 ([#99](https://github.com/bdraco/index-503/pull/99),
+  [`2423a8e`](https://github.com/bdraco/index-503/commit/2423a8e111b5f1a9de1ecb06fd1757c72ce5793b))
+
+- **deps**: Bump yarl from 1.20.0 to 1.20.1 ([#107](https://github.com/bdraco/index-503/pull/107),
+  [`cf59a92`](https://github.com/bdraco/index-503/commit/cf59a92d5b557e85de1933deecb54007663cf052))
+
+- **deps**: Bump yarl from 1.20.1 to 1.21.0 ([#120](https://github.com/bdraco/index-503/pull/120),
+  [`ecb9337`](https://github.com/bdraco/index-503/commit/ecb93378db7e76ea947f2a13e8cb01a0cda4bf48))
+
+- **deps**: Bump yarl from 1.21.0 to 1.22.0 ([#121](https://github.com/bdraco/index-503/pull/121),
+  [`9b4c996`](https://github.com/bdraco/index-503/commit/9b4c9960de2c690dbe810e893b4137a27682034f))
+
+- **deps-dev**: Bump pytest from 8.3.5 to 8.4.0
+  ([#104](https://github.com/bdraco/index-503/pull/104),
+  [`e57708e`](https://github.com/bdraco/index-503/commit/e57708e216367a94a5ea51ce1f3bcddaed4afbfc))
+
+- **deps-dev**: Bump pytest from 8.4.0 to 8.4.1
+  ([#111](https://github.com/bdraco/index-503/pull/111),
+  [`380a910`](https://github.com/bdraco/index-503/commit/380a9106c8d211ceb7bc2c80d9fab38578515b54))
+
+- **deps-dev**: Bump pytest from 8.4.1 to 8.4.2
+  ([#115](https://github.com/bdraco/index-503/pull/115),
+  [`8ec61e3`](https://github.com/bdraco/index-503/commit/8ec61e3493b1ed81434da45e0a3b77d42bbbb6fa))
+
+- **deps-dev**: Bump pytest-cov from 6.0.0 to 6.1.1
+  ([#96](https://github.com/bdraco/index-503/pull/96),
+  [`828581d`](https://github.com/bdraco/index-503/commit/828581dec4d99ee2cdeea10cc3868340da74d679))
+
+- **deps-dev**: Bump pytest-cov from 6.1.1 to 6.2.1
+  ([#108](https://github.com/bdraco/index-503/pull/108),
+  [`58bc1bd`](https://github.com/bdraco/index-503/commit/58bc1bd61b2aa590fc6b88a77c6155ddc7324da0))
+
+- **deps-dev**: Bump pytest-cov from 6.2.1 to 6.3.0
+  ([#116](https://github.com/bdraco/index-503/pull/116),
+  [`adcd6c4`](https://github.com/bdraco/index-503/commit/adcd6c470b4ae55e66576366bfb24f965ea5992d))
+
+- **deps-dev**: Bump pytest-cov from 6.3.0 to 7.0.0
+  ([#117](https://github.com/bdraco/index-503/pull/117),
+  [`2b79133`](https://github.com/bdraco/index-503/commit/2b79133b849e22fb6cc9c5626ad0d1be1fbe9527))
+
+- **deps-dev**: Bump pytest-cov from 7.0.0 to 7.1.0
+  ([#130](https://github.com/bdraco/index-503/pull/130),
+  [`4febab6`](https://github.com/bdraco/index-503/commit/4febab6f39da2ab9ad797c397dbcfca68b1725fe))
+
+- **deps-dev**: Bump requests from 2.32.3 to 2.32.4
+  ([#106](https://github.com/bdraco/index-503/pull/106),
+  [`e24ac7d`](https://github.com/bdraco/index-503/commit/e24ac7dd5cc0ec3aaf4cfe5f202184a8c078a324))
+
+- **deps-dev**: Bump urllib3 from 2.3.0 to 2.5.0
+  ([#110](https://github.com/bdraco/index-503/pull/110),
+  [`1b176c3`](https://github.com/bdraco/index-503/commit/1b176c3ac6c686d7da7dc02ffd170e01f529fee1))
+
+- **deps-dev**: Bump urllib3 from 2.5.0 to 2.6.3
+  ([#125](https://github.com/bdraco/index-503/pull/125),
+  [`67885b6`](https://github.com/bdraco/index-503/commit/67885b6e6cf1f23cad4e98b994c0bb70c0f0387a))
+
+- **pre-commit.ci**: Pre-commit autoupdate ([#127](https://github.com/bdraco/index-503/pull/127),
+  [`ee1b6e3`](https://github.com/bdraco/index-503/commit/ee1b6e3c0ad2e1c372e54c724afa88214bab98ab))
+
+- **pre-commit.ci**: Pre-commit autoupdate ([#118](https://github.com/bdraco/index-503/pull/118),
+  [`7d7885b`](https://github.com/bdraco/index-503/commit/7d7885b566257cac7673faac77a42a4a7ace6136))
+
+- **pre-commit.ci**: Pre-commit autoupdate ([#113](https://github.com/bdraco/index-503/pull/113),
+  [`685dfb6`](https://github.com/bdraco/index-503/commit/685dfb697273b40ea632866f2b63660746490013))
+
+- **pre-commit.ci**: Pre-commit autoupdate ([#112](https://github.com/bdraco/index-503/pull/112),
+  [`6855e53`](https://github.com/bdraco/index-503/commit/6855e5301bb851eadc7a05c6e3da02969e243f7a))
+
+- **pre-commit.ci**: Pre-commit autoupdate ([#103](https://github.com/bdraco/index-503/pull/103),
+  [`42653f2`](https://github.com/bdraco/index-503/commit/42653f25e40d391c2558a5d1f72714efaad215ba))
+
+- **pre-commit.ci**: Pre-commit autoupdate ([#100](https://github.com/bdraco/index-503/pull/100),
+  [`abe188f`](https://github.com/bdraco/index-503/commit/abe188f9955b025cfb5d12200b07f8d425b24abf))
+
+- **pre-commit.ci**: Pre-commit autoupdate ([#98](https://github.com/bdraco/index-503/pull/98),
+  [`176060f`](https://github.com/bdraco/index-503/commit/176060fec1ee2a98c4556945194d9b3df3a079db))
+
+- **pre-commit.ci**: Pre-commit autoupdate ([#97](https://github.com/bdraco/index-503/pull/97),
+  [`bf8e79c`](https://github.com/bdraco/index-503/commit/bf8e79cc803a5119908b8d638ec3c945de001f7b))
+
+### Continuous Integration
+
+- Refresh versions for ubuntu-latest tag change to Ubuntu 26
+  ([#142](https://github.com/bdraco/index-503/pull/142),
+  [`e372c5d`](https://github.com/bdraco/index-503/commit/e372c5d595729b22cc720c8aedb8fe56d23ac7df))
+
+
 ## v2.6.0 (2025-04-01)
 
 ### Chores
