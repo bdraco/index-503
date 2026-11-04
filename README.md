@@ -44,6 +44,22 @@ Running this again will replace the original index and delete the old index in a
 
 A lock will be held in the parent directory to prevent concurrent executions.
 
+### Merging with a remote index
+
+When you only have a partial set of wheels locally (for example after an
+incremental rsync) and want the generated index to keep advertising the wheels
+already published on the remote host, pass `--merge-with`:
+
+```
+index-503 musllinux --merge-with https://wheels.example.com/musllinux-index/
+```
+
+The remote `index.html` and per-project pages are fetched read-only. For each
+remote wheel whose filename is not present locally, an anchor with the
+absolute remote URL is appended to the project page so `pip` can fetch it
+directly. Local wheels always take precedence on filename collisions. If the
+remote index cannot be reached, only the local wheels are indexed.
+
 ## Example
 
 For image builds
