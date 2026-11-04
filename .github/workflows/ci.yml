@@ -36,11 +36,11 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - "3.10"
           - "3.11"
           - "3.12"
           - "3.13"
           - "3.14"
+          - "3.15"
         os:
           - ubuntu-latest
     runs-on: ${{ matrix.os }}
@@ -78,6 +78,13 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      # PSR v10 needs to run on a branch, not a detached HEAD
+      - name: Check out release branch
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: git switch -C "$BRANCH" "$GITHUB_SHA"
 
       # Run semantic release:
       # - Update CHANGELOG.md
