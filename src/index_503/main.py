@@ -14,3 +14,7 @@ def main_cli(origin: str) -> None:
         raise FileNotFoundError(f"Directory {origin_path} does not exist")
     target_path = make_index(origin_path)
     print(f"Index generated at {target_path}")
+
+
+if __name__ == "__main__":
+    main_cli()
