@@ -1,11 +1,12 @@
 import json
+import os
 from pathlib import Path
 from shutil import copyfile
 from unittest.mock import ANY, patch
 
 import pytest
 
-from index_503.index import make_index
+from index_503.index import IndexMaker, make_index
 from index_503.wheel_file import WHEEL_FILE_VERSION
 
 from . import FIXTURES
@@ -58,6 +59,59 @@ def test_make_index_fails(tmp_path: Path) -> None:
     assert len(parent_dir_contents) == 2
     # The lock file should always exist
     assert parent_dir_contents == {"musllinux", ".musllinux.index_503.lock"}
+
+
+def test_make_index_fails_partial_replace(tmp_path: Path) -> None:
+    """If _atomic_replace_old_index renames the temp dir then crashes, the
+    original exception must propagate (no FileNotFoundError masking it) and
+    the orphan must be cleaned up on the next run.
+    """
+    origin_path, target_path = setup_wheels(tmp_path, TEST_WHEELS)
+    parent_dir = origin_path.parent
+
+    def rename_then_fail(self: IndexMaker, temp_dir_path: Path, t: Path) -> None:
+        # Mimic a partial run: rename succeeds, then we blow up.
+        final_name = t.parent / (t.name + "-" + temp_dir_path.name)
+        os.rename(temp_dir_path, final_name)
+        raise ValueError("boom")
+
+    with pytest.raises(ValueError, match="boom"), patch.object(
+        IndexMaker, "_atomic_replace_old_index", rename_then_fail
+    ):
+        make_index(origin_path)
+
+    # Orphan dir survives the failed run...
+    orphans = [
+        p for p in parent_dir.iterdir() if p.name.startswith("musllinux-index-tmp")
+    ]
+    assert len(orphans) == 1
+
+    # ...but the next successful run cleans it up.
+    assert make_index(origin_path) == target_path
+    leftover = [
+        p for p in parent_dir.iterdir() if p.name.startswith("musllinux-index-tmp")
+    ]
+    # Exactly one survives — the live target the symlink points at.
+    assert len(leftover) == 1
+    assert leftover[0].name == target_path.readlink().name
+
+
+def test_make_index_cleans_orphan_build_symlink(tmp_path: Path) -> None:
+    """An orphan -build symlink from a crash between symlink and replace gets removed."""
+    origin_path, target_path = setup_wheels(tmp_path, TEST_WHEELS)
+    parent_dir = origin_path.parent
+
+    # Seed orphans that look exactly like crash leftovers.
+    orphan_dir = parent_dir / "musllinux-index-tmpDEADBEEF"
+    orphan_dir.mkdir()
+    (orphan_dir / "junk").write_text("x")
+    orphan_symlink = parent_dir / "musllinux-index-tmpFEEDFACE-build"
+    orphan_symlink.symlink_to(orphan_dir)
+
+    assert make_index(origin_path) == target_path
+
+    assert not orphan_dir.exists()
+    assert not orphan_symlink.exists()
 
 
 def test_make_index_end_to_end(tmp_path: Path) -> None:
