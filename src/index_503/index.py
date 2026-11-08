@@ -50,8 +50,7 @@ class IndexMaker:
 
     def make_index(self) -> Path:
         """Generate a simple repository of Python wheels."""
-        target_path = self.target_path
-        old_index = target_path.readlink() if target_path.exists() else None
+        old_index = self.target_path.readlink() if self.target_path.exists() else None
         temp_dir = mkdtemp(None, None, str(self.target_path.parent))
         try:
             self.cache.load()
@@ -59,13 +58,14 @@ class IndexMaker:
             temp_dir_path.chmod(0o755)
 
             self._make_index_at_temp_dir(temp_dir_path)
-            self._atomic_replace_old_index(temp_dir_path, target_path)
+            self._atomic_replace_old_index(temp_dir_path, self.target_path)
 
             if old_index:
-                _LOGGER.debug("Removing old index %s", old_index)
-                rmtree(old_index)
+                old_index_path = self.target_path.parent / old_index
+                _LOGGER.debug("Removing old index %s as %s", old_index, old_index_path)
+                rmtree(old_index_path)
 
-            return target_path
+            return self.target_path
         except Exception:
             _LOGGER.exception("Error generating index")
             rmtree(temp_dir)
@@ -80,9 +80,9 @@ class IndexMaker:
         # Rename the new index to the final name
         os.rename(temp_dir_path, final_name)
 
-        _LOGGER.debug("Symlinking %s with %s", final_name, final_build_name)
-        # Create a temporary symlink to the final name
-        os.symlink(final_name, final_build_name)
+        _LOGGER.debug("Symlinking %s as %s", final_name.name, final_build_name)
+        # Create a temporary symlink to the final name (relative, so the tree is relocatable)
+        os.symlink(final_name.name, final_build_name)
 
         _LOGGER.debug("Replacing %s with %s", final_build_name, target_path)
         # Finally replace the live index with the new one
