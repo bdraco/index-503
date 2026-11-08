@@ -2,6 +2,23 @@
 
 <!-- version list -->
 
+## v2.6.2 (2026-11-08)
+
+### Bug Fixes
+
+- Always use relative path for symlink target ([#143](https://github.com/bdraco/index-503/pull/143),
+  [`12fa7be`](https://github.com/bdraco/index-503/commit/12fa7beb59a67426ee513b8efe6653d5c227585d))
+
+### Chores
+
+- **deps**: Bump idna from 3.10 to 3.15 ([#147](https://github.com/bdraco/index-503/pull/147),
+  [`ab3cad0`](https://github.com/bdraco/index-503/commit/ab3cad0a3fd0eca0cb837bfb78a50122adbff2d2))
+
+- **deps-dev**: Bump certifi from 2024.12.14 to 2026.10.18
+  ([#148](https://github.com/bdraco/index-503/pull/148),
+  [`00cb68c`](https://github.com/bdraco/index-503/commit/00cb68ce76f4349f2913ee7d98b74e0726138335))
+
+
 ## v2.6.1 (2026-11-04)
 
 ### Bug Fixes
