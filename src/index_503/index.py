@@ -1,4 +1,5 @@
 import glob
+import json
 import logging
 import os
 from collections import defaultdict
@@ -12,6 +13,11 @@ from yarl import URL
 
 from .cache import IndexCache
 from .file import write_utf8_file
+from .json_generator import (
+    JSON_INDEX_FILENAME,
+    generate_index_json,
+    generate_project_page_json,
+)
 from .page_generator import generate_index, generate_project_page
 from .util import exclusive_lock, get_mtime_and_size_from_path
 from .wheel_file import WheelFile
@@ -126,20 +132,33 @@ class IndexMaker:
     def generate_index_pages(
         self, temp_dir_path: Path, projects: dict[str, list[WheelFile]]
     ) -> None:
-        """Generate the index pages."""
-        index_content = str(generate_index(projects.keys()))
+        """Generate the HTML (PEP 503) and JSON (PEP 691) index pages."""
+        project_names = projects.keys()
+        index_content = str(generate_index(project_names))
         write_utf8_file(temp_dir_path.joinpath("index.html"), index_content)
+        write_utf8_file(
+            temp_dir_path.joinpath(JSON_INDEX_FILENAME),
+            json.dumps(generate_index_json(project_names)),
+        )
         project_base_url = URL("../")
 
         for canonical_name, project_files in projects.items():
             project_dir: Path = temp_dir_path.joinpath(canonical_name)
             project_dir.mkdir(exist_ok=True, mode=0o755)
-            project_index = generate_project_page(
-                canonical_name,
-                natsorted(project_files, key=attrgetter("filename"), reverse=True),
-                project_base_url,
+            sorted_files = natsorted(
+                project_files, key=attrgetter("filename"), reverse=True
             )
-
+            project_index = generate_project_page(
+                canonical_name, sorted_files, project_base_url
+            )
             write_utf8_file(project_dir.joinpath("index.html"), str(project_index))
+            write_utf8_file(
+                project_dir.joinpath(JSON_INDEX_FILENAME),
+                json.dumps(
+                    generate_project_page_json(
+                        canonical_name, sorted_files, project_base_url
+                    )
+                ),
+            )
 
         _LOGGER.debug("Generated index pages for %s projects.", len(projects))
