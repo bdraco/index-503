@@ -47,24 +47,83 @@ def test_main_cli_dot_resolves_to_cwd(
     assert not origin_path.joinpath("-index").exists()
 
 
+def test_main_cli_parent_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test '..' resolves to the parent's real name instead of '..-index'."""
+    origin_path, origin_path_index = setup_wheels(tmp_path, TEST_WHEELS)
+    subdir = origin_path.joinpath("subdir")
+    subdir.mkdir()
+    monkeypatch.chdir(subdir)
+
+    result = CliRunner().invoke(main_cli, [".."])
+
+    assert result.exit_code == 0, result.output
+    assert f"Index generated at {origin_path_index}" in result.output
+    assert origin_path_index.joinpath("index.html").exists()
+    assert not origin_path.joinpath("..-index").exists()
+    assert not subdir.joinpath("..-index").exists()
+
+
+def test_main_cli_symlink_keeps_name(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test a symlinked origin is indexed under the symlink's own name."""
+    origin_path, origin_path_index = setup_wheels(tmp_path, TEST_WHEELS)
+    tmp_path.joinpath("alias").symlink_to(origin_path, target_is_directory=True)
+    monkeypatch.chdir(tmp_path)
+
+    result = CliRunner().invoke(main_cli, ["alias"])
+
+    alias_index = tmp_path.joinpath("alias-index")
+    assert result.exit_code == 0, result.output
+    assert f"Index generated at {alias_index}" in result.output
+    assert alias_index.joinpath("index.html").exists()
+    assert not origin_path_index.exists()
+
+
 def test_main_cli_root_rejected() -> None:
-    """Test '/' is rejected since its parent is itself."""
+    """Test '/' is rejected with a usage error since its parent is itself."""
     result = CliRunner().invoke(main_cli, ["/"])
 
-    assert isinstance(result.exception, FileNotFoundError)
-    assert "Directory / same as parent of /" in str(result.exception)
+    assert result.exit_code == 2
+    assert "Refusing to index filesystem root: /" in result.output
+
+
+def test_main_cli_symlink_to_root_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test a symlink to '/' is rejected like '/' itself."""
+    tmp_path.joinpath("rootlink").symlink_to("/", target_is_directory=True)
+    monkeypatch.chdir(tmp_path)
+
+    result = CliRunner().invoke(main_cli, ["rootlink"])
+
+    assert result.exit_code == 2
+    assert "Refusing to index filesystem root: rootlink" in result.output
+    assert not tmp_path.joinpath("rootlink-index").exists()
 
 
 def test_main_cli_missing_directory(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test a missing directory reports both the input and resolved path."""
+    """Test a missing directory is a usage error and creates nothing."""
     monkeypatch.chdir(tmp_path)
 
     result = CliRunner().invoke(main_cli, ["missing"])
 
-    assert isinstance(result.exception, FileNotFoundError)
-    assert str(result.exception) == (
-        f"Directory missing does not exist as {tmp_path / 'missing'}"
-    )
+    assert result.exit_code == 2
+    assert "'missing' does not exist" in result.output
     assert list(tmp_path.iterdir()) == []
+
+
+def test_main_cli_file_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test a regular file is rejected instead of indexed."""
+    tmp_path.joinpath("some.whl").write_bytes(b"")
+    monkeypatch.chdir(tmp_path)
+
+    result = CliRunner().invoke(main_cli, ["some.whl"])
+
+    assert result.exit_code == 2
+    assert "is a file" in result.output
+    assert not tmp_path.joinpath("some.whl-index").exists()
