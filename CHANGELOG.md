@@ -2,6 +2,47 @@
 
 <!-- version list -->
 
+## v2.6.3 (2026-11-10)
+
+### Bug Fixes
+
+- Improve directory path handling of origin user input
+  ([#149](https://github.com/bdraco/index-503/pull/149),
+  [`63c0c0f`](https://github.com/bdraco/index-503/commit/63c0c0f2cac230bd891a2a0fd57aac9d2f8a4093))
+
+- Validate origin with click.Path and cover '..' and symlink cases
+  ([#149](https://github.com/bdraco/index-503/pull/149),
+  [`63c0c0f`](https://github.com/bdraco/index-503/commit/63c0c0f2cac230bd891a2a0fd57aac9d2f8a4093))
+
+### Chores
+
+- **deps**: Bump airium from 0.2.7 to 0.3.2 ([#153](https://github.com/bdraco/index-503/pull/153),
+  [`a159f59`](https://github.com/bdraco/index-503/commit/a159f593d2a56a2f1392be7e4a0b81000732cd6a))
+
+- **deps**: Bump consolekit from 1.12.0 to 2.0.0
+  ([#154](https://github.com/bdraco/index-503/pull/154),
+  [`a34c000`](https://github.com/bdraco/index-503/commit/a34c000a90dcb65efc093523dcb802bdc68cd08f))
+
+- **deps-ci**: Bump the github-actions group across 1 directory with 3 updates
+  ([#151](https://github.com/bdraco/index-503/pull/151),
+  [`8ec8368`](https://github.com/bdraco/index-503/commit/8ec8368a7f75b6e9742aede26cf5139c901ed106))
+
+- **deps-dev**: Bump sphinx-rtd-theme from 3.0.2 to 3.1.0
+  ([#128](https://github.com/bdraco/index-503/pull/128),
+  [`c8d85b4`](https://github.com/bdraco/index-503/commit/c8d85b409ad7e876ddd867c9137ea9ab7e698ab8))
+
+### Continuous Integration
+
+- Auto-merge non-major Dependabot PRs after CI passes
+  ([#155](https://github.com/bdraco/index-503/pull/155),
+  [`923bc4a`](https://github.com/bdraco/index-503/commit/923bc4ab9756a4a89326b70cb2d2c575241ec0d7))
+
+### Testing
+
+- Cover origin path resolution in main_cli ([#149](https://github.com/bdraco/index-503/pull/149),
+  [`63c0c0f`](https://github.com/bdraco/index-503/commit/63c0c0f2cac230bd891a2a0fd57aac9d2f8a4093))
+
+
 ## v2.6.2 (2026-11-08)
 
 ### Bug Fixes
