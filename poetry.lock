@@ -2,18 +2,18 @@
 
 [[package]]
 name = "airium"
-version = "0.2.7"
+version = "0.3.2"
 description = "Easy and quick html builder with natural syntax correspondence (python->html). No templates needed. Serves pure pythonic library with no dependencies."
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "airium-0.2.7-py3-none-any.whl", hash = "sha256:35e3ae334327b17b7c2fc39bb57ab2c48171ca849f8cf3dff11437d1e054952e"},
-    {file = "airium-0.2.7.tar.gz", hash = "sha256:6b4dd8b69838b7766179ab90078a049dc337b1da4fc0f7754f30f74d6eed706e"},
+    {file = "airium-0.3.2-py3-none-any.whl", hash = "sha256:779332faa908f4ddeeebf9fcedd94ef7ae649e9ddce559d550f200dbf54f1bd2"},
+    {file = "airium-0.3.2.tar.gz", hash = "sha256:9052f50d4b24b3e06db09b7edfa7cc61cc6f91e702c903f0a640fc5fd1ff1574"},
 ]
 
 [package.extras]
-dev = ["check-manifest", "flake8 (>=7.1,<8.0)", "mypy (>=1.10,<2.0)", "pytest (>=6.2,<7.0)", "pytest-cov (>=3.0,<4.0)", "pytest-mock (>=3.6,<4.0)", "types-beautifulsoup4 (>=4.12,<5.0)", "types-requests (>=2.32,<3.0)"]
+dev = ["black (>=24.8,<25.0)", "check-manifest", "mypy (>=1.10,<2.0)", "pytest (>=8.3,<9.0)", "pytest-cov (>=5.0,<6.0)", "pytest-mock (>=3.6,<4.0)", "ruff (>=0.6,<1.0)", "types-beautifulsoup4 (>=4.12,<5.0)", "types-requests (>=2.32,<3.0)"]
 parse = ["beautifulsoup4 (>=4.10.0,<5.0)", "requests (>=2.12.0,<3)"]
 
 [[package]]
@@ -1454,4 +1454,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "96c65279236351f2f41f62d2a84dd00c6d147c237cf2ac4d634fb49ae23e829e"
+content-hash = "9e942e26e5d95c0105d8e8de5da9b67dfbba7094a6967e12f43d194f880bb7db"
