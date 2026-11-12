@@ -1,10 +1,23 @@
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlsplit
 
 import click
 from consolekit import click_command
 
 from .index import make_index
+from .remote_index import RemoteIndexError
+
+
+def _validate_merge_with(
+    ctx: click.Context, param: click.Parameter, value: Optional[str]
+) -> Optional[str]:
+    """Require an http(s) URL so a typo fails before any filesystem work."""
+    if value is None:
+        return None
+    if urlsplit(value).scheme not in {"http", "https"}:
+        raise click.BadParameter(f"expected an http(s) URL, got {value!r}")
+    return value
 
 
 @click.argument(
@@ -16,11 +29,13 @@ from .index import make_index
     "merge_with",
     type=click.STRING,
     default=None,
+    callback=_validate_merge_with,
     help=(
         "URL of a remote PEP 503 index to merge with. Wheels present locally "
         "take precedence; remote-only wheels are linked via their absolute "
         "URL so 'pip' can fetch them directly. Useful when rsync'ing a "
-        "partial wheel set to a host that already serves additional wheels."
+        "partial wheel set to a host that already serves additional wheels. "
+        "The command fails if the remote index cannot be fetched."
     ),
 )
 @click_command()
@@ -36,5 +51,8 @@ def main_cli(origin: Path, merge_with: Optional[str] = None) -> None:
             f"Refusing to index filesystem root: {origin}",
             param_hint="'ORIGIN'",
         )
-    target_path = make_index(sanitize_path, merge_with=merge_with)
+    try:
+        target_path = make_index(sanitize_path, merge_with=merge_with)
+    except RemoteIndexError as exc:
+        raise click.ClickException(str(exc)) from exc
     print(f"Index generated at {target_path}")

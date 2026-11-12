@@ -54,11 +54,14 @@ already published on the remote host, pass `--merge-with`:
 index-503 musllinux --merge-with https://wheels.example.com/musllinux-index/
 ```
 
-The remote `index.html` and per-project pages are fetched read-only. For each
-remote wheel whose filename is not present locally, an anchor with the
+The remote `index.html` and per-project pages are fetched read-only. A plain
+web server directory listing of wheels works as well as a generated index. For
+each remote wheel whose filename is not present locally, an anchor with the
 absolute remote URL is appended to the project page so `pip` can fetch it
 directly. Local wheels always take precedence on filename collisions. If the
-remote index cannot be reached, only the local wheels are indexed.
+remote index or any of its project pages cannot be fetched, the command fails
+and the existing index is left untouched, so a transient network error can
+never publish an index that is missing the remote wheels.
 
 ## Example
 

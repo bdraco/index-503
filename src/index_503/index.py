@@ -32,6 +32,8 @@ def make_index(origin_path: Path, merge_with: Optional[str] = None) -> Path:
         should be merged into the generated index. Local wheels take
         precedence when filenames collide; remote-only files are emitted as
         absolute-URL anchors so ``pip`` can fetch them directly.
+    :raises RemoteIndexError: if ``merge_with`` is set and the remote index
+        cannot be fetched. The existing index is left untouched.
 
     Example
     musllinux
