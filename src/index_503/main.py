@@ -31,11 +31,15 @@ def _validate_merge_with(
     default=None,
     callback=_validate_merge_with,
     help=(
-        "URL of a remote PEP 503 index to merge with. Wheels present locally "
-        "take precedence; remote-only wheels are linked via their absolute "
-        "URL so 'pip' can fetch them directly. Useful when rsync'ing a "
-        "partial wheel set to a host that already serves additional wheels. "
-        "The command fails if the remote index cannot be fetched."
+        "URL of a remote PEP 503 index or wheel directory listing to merge "
+        "with. Point it at the directory that serves the wheel files (for "
+        "example https://host/musllinux/), not at a previously generated "
+        "*-index/ URL, whose files are replaced when the new index is "
+        "published. Wheels present locally take precedence; remote-only "
+        "wheels are linked via their absolute URL so 'pip' can fetch them "
+        "directly. Useful when rsync'ing a partial wheel set to a host that "
+        "already serves additional wheels. The command fails if the remote "
+        "index cannot be fetched."
     ),
 )
 @click_command()

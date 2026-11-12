@@ -60,13 +60,17 @@ class IndexMaker:
     def make_index(self) -> Path:
         """Generate a simple repository of Python wheels."""
         old_index = self.target_path.readlink() if self.target_path.exists() else None
+        # Fetch the remote index before any local work so a bad URL or an
+        # unreachable host fails in milliseconds, without a temp dir to clean
+        # up and without discarding a full cold-cache sha256 pass.
+        remote_index = self._fetch_remote_index()
         temp_dir = mkdtemp(None, None, str(self.target_path.parent))
         try:
             self.cache.load()
             temp_dir_path = Path(temp_dir)
             temp_dir_path.chmod(0o755)
 
-            self._make_index_at_temp_dir(temp_dir_path)
+            self._make_index_at_temp_dir(temp_dir_path, remote_index)
             self._atomic_replace_old_index(temp_dir_path, self.target_path)
 
             if old_index:
@@ -97,7 +101,11 @@ class IndexMaker:
         # Finally replace the live index with the new one
         os.replace(final_build_name, target_path)
 
-    def _make_index_at_temp_dir(self, temp_dir_path: Path) -> None:
+    def _make_index_at_temp_dir(
+        self,
+        temp_dir_path: Path,
+        remote_index: Optional[dict[str, list[RemoteEntry]]] = None,
+    ) -> None:
         """Generate a simple repository of Python wheels in a temp dir."""
         new_wheel_file_objects: list[WheelFile] = []
         projects: dict[str, list[WheelFile]] = defaultdict(list)
@@ -129,17 +137,24 @@ class IndexMaker:
             os.link(wheel_path, target_file)
 
         self.cache.remove_stale_keys(all_wheel_files)
-        remote_extras = self._collect_remote_extras(all_wheel_files)
+        remote_extras = self._filter_remote_extras(remote_index or {}, all_wheel_files)
         self.generate_index_pages(temp_dir_path, projects, remote_extras)
         self.cache.write_to_new(temp_dir_path)
 
-    def _collect_remote_extras(
-        self, local_wheel_filenames: set[str]
-    ) -> dict[str, list[RemoteEntry]]:
-        """Fetch the merge-target index and drop any files we already serve."""
+    def _fetch_remote_index(self) -> dict[str, list[RemoteEntry]]:
+        """Fetch the merge-target index, or return nothing when not merging.
+
+        :raises RemoteIndexError: if the remote index cannot be fetched.
+        """
         if not self.merge_with:
             return {}
-        remote = fetch_remote_index(self.merge_with)
+        return fetch_remote_index(self.merge_with)
+
+    @staticmethod
+    def _filter_remote_extras(
+        remote: dict[str, list[RemoteEntry]], local_wheel_filenames: set[str]
+    ) -> dict[str, list[RemoteEntry]]:
+        """Drop remote entries whose filename we already serve locally."""
         extras: dict[str, list[RemoteEntry]] = {}
         for canonical_name, entries in remote.items():
             filtered = [

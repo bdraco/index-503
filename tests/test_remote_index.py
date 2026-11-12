@@ -17,6 +17,7 @@ from index_503.remote_index import (
     RemoteIndexError,
     _parse_project_page,
     _parse_top_index,
+    _project_name_from_filename,
     fetch_remote_index,
 )
 
@@ -71,13 +72,16 @@ _DIR_LISTING_HTML = """<!DOCTYPE html>
 <a href="other_pkg-1.2.3-py3-none-any.whl">other_pkg-1.2.3-py3-none-any.whl</a>
 <a href="other_pkg-1.2.3.tar.gz">other_pkg-1.2.3.tar.gz</a>
 <a href="-1.0-py3-none-any.whl">-1.0-py3-none-any.whl</a>
+<a href="cryptography-42.0.5-cp39-abi3-musllinux_1_2_x86_64.whl">cryptography-42.0.5-cp39-abi3-musllinux_1_2_x8..&gt;</a>
+<a href="README.whl">README.whl</a>
 </body></html>
 """
 
 
 class _FakeResponse:
-    def __init__(self, body: bytes) -> None:
+    def __init__(self, body: bytes, url: str = "") -> None:
         self._body = BytesIO(body)
+        self._url = url
         self.headers = type(
             "H", (), {"get_content_charset": staticmethod(lambda: "utf-8")}
         )()
@@ -91,6 +95,16 @@ class _FakeResponse:
     def read(self) -> bytes:
         return self._body.read()
 
+    def geturl(self) -> str:
+        return self._url
+
+
+class _Redirect:
+    """Page value that redirects to ``url`` (served from the same ``pages``)."""
+
+    def __init__(self, url: str) -> None:
+        self.url = url
+
 
 def _fake_urlopen_factory(pages: dict[str, Any]) -> Any:
     """Serve ``pages`` by URL; a value that is an exception is raised instead."""
@@ -98,9 +112,12 @@ def _fake_urlopen_factory(pages: dict[str, Any]) -> Any:
     def _fake_urlopen(request: Any, timeout: int = 30) -> _FakeResponse:
         url = request.full_url if hasattr(request, "full_url") else str(request)
         page = pages[url]
+        while isinstance(page, _Redirect):
+            url = page.url
+            page = pages[url]
         if isinstance(page, Exception):
             raise page
-        return _FakeResponse(page.encode("utf-8"))
+        return _FakeResponse(page.encode("utf-8"), url)
 
     return _fake_urlopen
 
@@ -246,26 +263,151 @@ def test_fetch_remote_index_from_directory_listing() -> None:
         result = fetch_remote_index(base)
 
     # Sort links, the parent link, the sdist and the wheel files themselves are
-    # never fetched as project pages; the unparseable "-1.0-..." wheel is skipped.
-    assert set(result) == {"bleak", "other-pkg"}
+    # never fetched as project pages; the unparseable "-1.0-..." wheel and the
+    # dash-less "README.whl" are skipped. The wheel whose link text nginx
+    # truncated with "..>" is still found because the href is used.
+    assert set(result) == {"bleak", "other-pkg", "cryptography"}
     assert [e.href for e in result["bleak"]] == [
         "https://example.com/musllinux/bleak-0.18.0-py3-none-any.whl"
     ]
     assert [e.filename for e in result["other-pkg"]] == [
         "other_pkg-1.2.3-py3-none-any.whl"
     ]
+    assert [e.filename for e in result["cryptography"]] == [
+        "cryptography-42.0.5-cp39-abi3-musllinux_1_2_x86_64.whl"
+    ]
 
 
-def test_fetch_remote_index_warns_on_page_without_links(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+def test_fetch_remote_index_from_listing_with_only_truncated_texts() -> None:
+    """All link texts truncated: wheels are still wheels, not project pages."""
+    base = "https://example.com/musllinux/"
+    pages = {
+        base: (
+            '<a href="../">../</a>'
+            '<a href="cryptography-42.0.5-cp39-abi3-musllinux_1_2_x86_64.whl">'
+            "cryptography-42.0.5-cp39-abi3-musllinux_1_2_x8..&gt;</a>"
+            '<a href="cryptography-42.0.5-cp39-abi3-musllinux_1_2_aarch64.whl">'
+            "cryptography-42.0.5-cp39-abi3-musllinux_1_2_aa..&gt;</a>"
+        )
+    }
+    with patch(
+        "index_503.remote_index.urlopen", side_effect=_fake_urlopen_factory(pages)
+    ):
+        result = fetch_remote_index(base)
+
+    assert sorted(e.filename for e in result["cryptography"]) == [
+        "cryptography-42.0.5-cp39-abi3-musllinux_1_2_aarch64.whl",
+        "cryptography-42.0.5-cp39-abi3-musllinux_1_2_x86_64.whl",
+    ]
+
+
+def test_parse_top_index_skips_wheel_hrefs_with_truncated_text() -> None:
+    hrefs = _parse_top_index(
+        '<a href="sub/">sub</a>'
+        '<a href="cryptography-42.0.5-cp39-abi3-musllinux_1_2_x86_64.whl">'
+        "cryptography-42.0.5-cp39-abi3-musllinux_1_2_x8..&gt;</a>"
+    )
+    assert hrefs == ["sub/"]
+
+
+def test_parse_project_page_uses_percent_decoded_href_basename() -> None:
+    entries = _parse_project_page(
+        '<a href="../foo%2Dbar-1.0-py3-none-any.whl#sha256=abc">foo..&gt;</a>',
+        "https://example.com/simple/foo-bar/",
+    )
+    assert [e.filename for e in entries] == ["foo-bar-1.0-py3-none-any.whl"]
+
+
+@pytest.mark.parametrize(
+    ("filename", "expected"),
+    [
+        ("Foo_Bar-1.0-py3-none-any.whl", "foo-bar"),
+        ("foo-1.0-1-py3-none-any.whl", "foo"),
+        ("foo.whl", None),
+        ("README.whl", None),
+        ("foo-1.0.whl", None),
+        ("-1.0-py3-none-any.whl", None),
+    ],
+)
+def test_project_name_from_filename(filename: str, expected: Any) -> None:
+    assert _project_name_from_filename(filename) == expected
+
+
+def test_fetch_remote_index_raises_on_page_without_links() -> None:
+    """A 200 login/block page with no anchors must not become an empty merge."""
     base = "https://example.com/simple/"
     pages = {base: "<html><body>Please log in</body></html>"}
     with patch(
         "index_503.remote_index.urlopen", side_effect=_fake_urlopen_factory(pages)
+    ), pytest.raises(RemoteIndexError, match="contains no links"):
+        fetch_remote_index(base)
+
+
+def test_fetch_remote_index_warns_on_project_page_without_links(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    base = "https://example.com/simple/"
+    pages = _generated_index_pages(base)
+    pages[base + "other-pkg/"] = "<html><body>Service unavailable</body></html>"
+    with patch(
+        "index_503.remote_index.urlopen", side_effect=_fake_urlopen_factory(pages)
+    ):
+        result = fetch_remote_index(base)
+    assert "other-pkg" not in result
+    assert "https://example.com/simple/other-pkg/ contains no links" in caplog.text
+
+
+def test_fetch_remote_index_warns_when_merge_is_empty(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Links on another host are skipped; an empty merge is reported visibly."""
+    base = "https://example.com/simple/"
+    pages = {base: '<a href="https://other.example.org/simple/bleak/">bleak</a>'}
+    with patch(
+        "index_503.remote_index.urlopen", side_effect=_fake_urlopen_factory(pages)
     ):
         assert fetch_remote_index(base) == {}
-    assert "contains no links" in caplog.text
+    assert "yielded no wheels" in caplog.text
+    assert "1 link(s) skipped" in caplog.text
+
+
+def test_fetch_remote_index_follows_links_differing_only_in_scheme() -> None:
+    base = "https://example.com/simple/"
+    pages = {
+        base: '<a href="http://example.com/simple/bleak/">bleak</a>',
+        "http://example.com/simple/bleak/": _BLEAK_PAGE_HTML,
+    }
+    with patch(
+        "index_503.remote_index.urlopen", side_effect=_fake_urlopen_factory(pages)
+    ):
+        result = fetch_remote_index(base)
+    assert set(result) == {"bleak"}
+
+
+def test_fetch_remote_index_resolves_links_against_redirect_target() -> None:
+    """Relative hrefs are resolved against the URL that was actually served."""
+    base = "https://example.com/simple/"
+    moved = "https://example.com/wheels/simple/"
+    pages = {
+        base: _Redirect(moved),
+        moved: _TOP_INDEX_HTML,
+        moved + "bleak/": _Redirect("https://example.com/wheels/simple/bleak-v2/"),
+        "https://example.com/wheels/simple/bleak-v2/": _BLEAK_PAGE_HTML,
+        moved + "other-pkg/": _OTHER_PAGE_HTML,
+        moved + "typing-extensions/": _TYPING_EXT_PAGE_HTML,
+    }
+    with patch(
+        "index_503.remote_index.urlopen", side_effect=_fake_urlopen_factory(pages)
+    ):
+        result = fetch_remote_index(base)
+
+    assert {e.href for e in result["bleak"]} == {
+        "https://example.com/wheels/simple/bleak-0.17.0-py3-none-any.whl#sha256=remote-hash-A",
+        "https://example.com/wheels/simple/bleak-0.18.0-py3-none-any.whl#sha256=remote-hash-B",
+    }
+    assert [e.href for e in result["other-pkg"]] == [
+        "https://example.com/wheels/simple/other_pkg-1.2.3-py3-none-any.whl#sha256=other-hash"
+    ]
 
 
 def test_make_index_merges_remote_only_wheels(tmp_path: Path) -> None:
@@ -306,7 +448,9 @@ def test_make_index_merges_remote_only_wheels(tmp_path: Path) -> None:
     assert "remote-te-hash" not in te_page
 
 
-def test_make_index_fetch_failure_keeps_existing_index(tmp_path: Path) -> None:
+def test_make_index_fetch_failure_keeps_existing_index(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     """A fetch error fails the build and leaves the previous index untouched."""
     origin_path, origin_path_index = setup_wheels(tmp_path, TEST_WHEELS)
     assert make_index(origin_path) == origin_path_index
@@ -328,6 +472,19 @@ def test_make_index_fetch_failure_keeps_existing_index(tmp_path: Path) -> None:
         "musllinux-index",
         ".musllinux.index_503.lock",
     }
+    # The remote is fetched before the temp dir exists, so the failure is not
+    # logged as an index generation error with a traceback.
+    assert "Error generating index" not in caplog.text
+
+
+def test_make_index_fetches_remote_before_hashing_wheels(tmp_path: Path) -> None:
+    """A bad remote fails before any local wheel is opened."""
+    origin_path, _ = setup_wheels(tmp_path, TEST_WHEELS)
+    with patch("index_503.remote_index.urlopen", side_effect=OSError("nope")), patch(
+        "index_503.index.WheelFile.from_wheel"
+    ) as from_wheel, pytest.raises(RemoteIndexError):
+        make_index(origin_path, merge_with="https://example.invalid/simple/")
+    from_wheel.assert_not_called()
 
 
 def test_main_cli_merge_with_is_passed_through(

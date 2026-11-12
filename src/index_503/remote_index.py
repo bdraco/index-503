@@ -8,7 +8,7 @@ from html.parser import HTMLParser
 from http.client import HTTPException
 from typing import Optional
 from urllib.error import URLError
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import unquote, urljoin, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 from airium import Airium
@@ -84,8 +84,11 @@ class _AnchorParser(HTMLParser):
             self._current_text = []
 
 
-def _fetch(url: str, timeout: int) -> str:
-    """Fetch a URL and return the decoded body.
+def _fetch(url: str, timeout: int) -> tuple[str, str]:
+    """Fetch a URL and return the decoded body and the final URL.
+
+    The final URL is the one reached after any redirects; relative links on
+    the page must be resolved against it, not against ``url``.
 
     :raises RemoteIndexError: if the request fails or the body cannot be
         decoded with the charset the server advertised.
@@ -96,7 +99,7 @@ def _fetch(url: str, timeout: int) -> str:
         )
         with urlopen(request, timeout=timeout) as response:  # noqa: S310  # nosec B310
             charset = response.headers.get_content_charset() or "utf-8"
-            return response.read().decode(charset)
+            return response.read().decode(charset), response.geturl()
     except (URLError, OSError, HTTPException, ValueError, LookupError) as exc:
         # URLError covers HTTPError and network failures; OSError covers
         # socket timeouts; HTTPException covers IncompleteRead; ValueError
@@ -112,34 +115,55 @@ def _parse_anchors(html: str) -> list[tuple[dict[str, str], str]]:
     return parser.anchors
 
 
-def _parse_top_index(html: str) -> list[str]:
-    """Return the list of project hrefs from a top-level simple index page.
+def _filename_from_href(href: str) -> str:
+    """Return the (percent-decoded) last path component of ``href``."""
+    return unquote(urlsplit(href).path).rsplit("/", 1)[-1]
 
-    Anchors whose text is a wheel filename are not project links (a plain
+
+def _project_hrefs(anchors: list[tuple[dict[str, str], str]]) -> list[str]:
+    """Return the hrefs of ``anchors`` that may point at a project page.
+
+    Anchors whose href is a wheel file are not project links (a plain
     directory listing of wheels has them on the top page) and are skipped;
-    :func:`_parse_project_page` collects those from the same page instead.
+    :func:`_entries_from_anchors` collects those from the same page instead.
+    The href is used rather than the anchor text because nginx and Apache
+    directory listings truncate long link texts.
     """
     return [
         attrs["href"]
-        for attrs, text in _parse_anchors(html)
-        if "href" in attrs and not text.endswith(".whl")
+        for attrs, _text in anchors
+        if "href" in attrs and not _filename_from_href(attrs["href"]).endswith(".whl")
     ]
 
 
-def _parse_project_page(html: str, page_url: str) -> list[RemoteEntry]:
-    """Return the wheel entries from a project page, with absolute hrefs."""
+def _parse_top_index(html: str) -> list[str]:
+    """Return the list of project hrefs from a top-level simple index page."""
+    return _project_hrefs(_parse_anchors(html))
+
+
+def _entries_from_anchors(
+    anchors: list[tuple[dict[str, str], str]], page_url: str
+) -> list[RemoteEntry]:
+    """Return the wheel entries among ``anchors``, with absolute hrefs.
+
+    The filename is taken from the href, not the anchor text: PEP 503 requires
+    the two to match, but nginx and Apache directory listings truncate the
+    text of long names (``cryptography-42.0.5-cp39-abi3-musllinux_1..>``).
+    """
     entries: list[RemoteEntry] = []
-    for attrs, text in _parse_anchors(html):
+    for attrs, _text in anchors:
         href = attrs.get("href")
-        if not href or not text:
+        if not href:
             continue
+        absolute_href = urljoin(page_url, href)
+        filename = _filename_from_href(absolute_href)
         # Only collect wheel entries — skip sdists and other formats.
-        if not text.endswith(".whl"):
+        if not filename.endswith(".whl"):
             continue
         entries.append(
             RemoteEntry(
-                filename=text,
-                href=urljoin(page_url, href),
+                filename=filename,
+                href=absolute_href,
                 requires_python=attrs.get("data-requires-python"),
                 dist_info_metadata=attrs.get("data-dist-info-metadata"),
                 core_metadata=attrs.get("data-core-metadata"),
@@ -148,13 +172,22 @@ def _parse_project_page(html: str, page_url: str) -> list[RemoteEntry]:
     return entries
 
 
+def _parse_project_page(html: str, page_url: str) -> list[RemoteEntry]:
+    """Return the wheel entries from a project page, with absolute hrefs."""
+    return _entries_from_anchors(_parse_anchors(html), page_url)
+
+
 def _project_name_from_filename(filename: str) -> Optional[str]:
     """Return the canonical project name of a wheel filename, or None.
 
-    PEP 427: the distribution name is the first dash-separated field. The
+    PEP 427: the distribution name is the first dash-separated field and a
+    wheel filename has at least five fields (``name-version-python-abi-
+    platform.whl``), so anything with fewer dashes is not a wheel. The
     result is validated against the canonical-name alphabet because it is
     used as a directory name in the generated index.
     """
+    if filename.count("-") < 4:
+        return None
     canonical = canonicalize_name(filename.split("-", 1)[0])
     if not _CANONICAL_NAME_RE.match(canonical):
         return None
@@ -168,22 +201,28 @@ def _resolve_project_url(
 
     Links that cannot be project pages are dropped: sort links of a plain
     directory listing (query string), fragment-only links and anything that
-    resolves outside ``base_url`` such as a parent-directory link. With
-    ``directories_only`` (the top page is a file listing) only links that
-    already end in ``/`` are followed, so sdists and other files are never
-    requested as project pages.
+    resolves outside ``base_url`` such as a parent-directory link. Only the
+    host and path are compared, so an absolute link that differs from
+    ``base_url`` in scheme only (``http://`` vs ``https://``) is followed.
+    With ``directories_only`` (the top page is a file listing) only links
+    that already end in ``/`` are followed, so sdists and other files are
+    never requested as project pages.
     """
     if directories_only and not project_href.endswith("/"):
         return None
-    project_url = urljoin(base_url, project_href)
-    parts = urlsplit(project_url)
+    parts = urlsplit(urljoin(base_url, project_href))
     if parts.query or parts.fragment:
         return None
-    if not project_url.endswith("/"):
-        project_url = project_url + "/"
-    if project_url == base_url or not project_url.startswith(base_url):
+    if not parts.path.endswith("/"):
+        parts = parts._replace(path=parts.path + "/")
+    base = urlsplit(base_url)
+    if (
+        parts.netloc.lower() != base.netloc.lower()
+        or parts.path == base.path
+        or not parts.path.startswith(base.path)
+    ):
         return None
-    return project_url
+    return urlunsplit(parts)
 
 
 def fetch_remote_index(
@@ -198,17 +237,23 @@ def fetch_remote_index(
     text or path.
 
     :raises RemoteIndexError: if the top-level index or any project page
-        cannot be fetched. Nothing is returned on partial failure so a
-        transient error can never publish an index missing remote wheels.
+        cannot be fetched, or if the top-level page contains no links at all
+        (a login, block or maintenance page served with status 200). Nothing
+        is returned on partial failure so a transient error can never publish
+        an index missing remote wheels.
     """
     if not base_url.endswith("/"):
         base_url = base_url + "/"
 
-    index_html = _fetch(base_url, timeout)
+    index_html, final_url = _fetch(base_url, timeout)
+    if final_url != base_url:
+        # Resolve relative links against the page that was actually served.
+        _LOGGER.debug("Remote index %s redirected to %s", base_url, final_url)
+        base_url = final_url if final_url.endswith("/") else final_url + "/"
     index_anchors = _parse_anchors(index_html)
     if not index_anchors:
-        _LOGGER.warning(
-            "Remote index %s contains no links; is it a simple index?", base_url
+        raise RemoteIndexError(
+            f"Remote index {base_url} contains no links; is it a simple index?"
         )
 
     # canonical project name -> {filename: entry}. Keying on the filename
@@ -227,25 +272,49 @@ def fetch_remote_index(
                 continue
             result.setdefault(canonical, {}).setdefault(entry.filename, entry)
 
-    top_entries = _parse_project_page(index_html, base_url)
+    top_entries = _entries_from_anchors(index_anchors, base_url)
     _add_entries(base_url, top_entries)
     # Wheel links on the top page mean it is a file listing, not a generated
     # index, so only its sub-directories can hold further wheels.
     is_listing = bool(top_entries)
 
     seen_urls: set[str] = set()
-    for project_href in _parse_top_index(index_html):
+    skipped_links = 0
+    for project_href in _project_hrefs(index_anchors):
         project_url = _resolve_project_url(base_url, project_href, is_listing)
         if project_url is None:
             _LOGGER.debug("Skipping non-project link %r on %s", project_href, base_url)
+            skipped_links += 1
             continue
         if project_url in seen_urls:
             continue
         seen_urls.add(project_url)
-        page_html = _fetch(project_url, timeout)
-        entries = _parse_project_page(page_html, project_url)
-        if not entries:
-            _LOGGER.debug("Remote page %s contains no wheel links", project_url)
+        page_html, page_url = _fetch(project_url, timeout)
+        page_anchors = _parse_anchors(page_html)
+        if not page_anchors:
+            # A project page with no links at all is not a simple index page
+            # (an error or block page served with status 200); its wheels
+            # would silently vanish from the merged index.
+            _LOGGER.warning(
+                "Remote project page %s contains no links; any wheels it "
+                "should list will be missing from the merged index",
+                page_url,
+            )
             continue
-        _add_entries(project_url, entries)
+        entries = _entries_from_anchors(page_anchors, page_url)
+        if not entries:
+            _LOGGER.debug("Remote page %s contains no wheel links", page_url)
+            continue
+        _add_entries(page_url, entries)
+    if not result:
+        # Visible with the CLI's default logging, unlike the debug messages
+        # above: the merge contributed nothing, which is only correct when the
+        # remote really has no wheels.
+        _LOGGER.warning(
+            "Remote index %s yielded no wheels: %s project page(s) fetched, "
+            "%s link(s) skipped as non-project links",
+            base_url,
+            len(seen_urls),
+            skipped_links,
+        )
     return {name: list(entries.values()) for name, entries in result.items()}
