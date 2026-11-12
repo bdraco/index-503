@@ -44,6 +44,33 @@ Running this again will replace the original index and delete the old index in a
 
 A lock will be held in the parent directory to prevent concurrent executions.
 
+### Merging with a remote index
+
+When you only have a partial set of wheels locally (for example after an
+incremental rsync) and want the generated index to keep advertising the wheels
+already published on the remote host, pass `--merge-with`:
+
+```
+index-503 musllinux --merge-with https://wheels.example.com/musllinux/
+```
+
+Point `--merge-with` at the URL that serves the wheel files themselves, such
+as the plain web server directory listing of the remote `musllinux` directory
+shown above. A generated PEP 503 index works too, but **not** the
+`musllinux-index/` tree that this tool itself publishes: its project pages link
+to hard links inside the index tree, which is replaced wholesale on the next
+publish, so every remote-only link would 404 as soon as the merged index goes
+live.
+
+The remote pages are fetched read-only. For each remote wheel whose filename is
+not present locally, an anchor with the absolute remote URL is appended to the
+project page so `pip` can fetch it directly. Local wheels always take
+precedence on filename collisions. If the remote index or any of its project
+pages cannot be fetched, or the remote page contains no links at all, the
+command fails and the existing index is left untouched, so a transient network
+error can never publish an index that is missing the remote wheels. The remote
+is fetched before any local wheel is hashed, so a bad URL fails immediately.
+
 ## Example
 
 For image builds

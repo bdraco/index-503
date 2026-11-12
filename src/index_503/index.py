@@ -6,6 +6,7 @@ from operator import attrgetter
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
+from typing import Optional
 
 from natsort import natsorted
 from yarl import URL
@@ -13,19 +14,26 @@ from yarl import URL
 from .cache import IndexCache
 from .file import write_utf8_file
 from .page_generator import generate_index, generate_project_page
+from .remote_index import RemoteEntry, fetch_remote_index
 from .util import exclusive_lock, get_mtime_and_size_from_path
 from .wheel_file import WheelFile
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def make_index(origin_path: Path) -> Path:
+def make_index(origin_path: Path, merge_with: Optional[str] = None) -> Path:
     """Generate a simple repository of Python wheels.
 
     This function will take a directory of wheels at the top level
     of a webserver and generate a simple repository of wheels.
 
-    :param origin: The name of the directory containing the wheels.
+    :param origin_path: The directory containing the wheels.
+    :param merge_with: Optional URL of a remote PEP 503 index whose entries
+        should be merged into the generated index. Local wheels take
+        precedence when filenames collide; remote-only files are emitted as
+        absolute-URL anchors so ``pip`` can fetch them directly.
+    :raises RemoteIndexError: if ``merge_with`` is set and the remote index
+        cannot be fetched. The existing index is left untouched.
 
     Example
     musllinux
@@ -34,30 +42,35 @@ def make_index(origin_path: Path) -> Path:
     musllinux-index
     """
     with exclusive_lock(origin_path):
-        return IndexMaker(origin_path).make_index()
+        return IndexMaker(origin_path, merge_with=merge_with).make_index()
 
 
 class IndexMaker:
     """Generate a simple repository of Python wheels."""
 
-    def __init__(self, origin_path: Path) -> None:
+    def __init__(self, origin_path: Path, merge_with: Optional[str] = None) -> None:
         """Generate a simple repository of Python wheels."""
         self.origin_path = origin_path
         self.origin_name = origin_path.name
         target_path = origin_path.parent / (origin_path.name + "-index")
         self.target_path = target_path
         self.cache = IndexCache(target_path)
+        self.merge_with = merge_with
 
     def make_index(self) -> Path:
         """Generate a simple repository of Python wheels."""
         old_index = self.target_path.readlink() if self.target_path.exists() else None
+        # Fetch the remote index before any local work so a bad URL or an
+        # unreachable host fails in milliseconds, without a temp dir to clean
+        # up and without discarding a full cold-cache sha256 pass.
+        remote_index = self._fetch_remote_index()
         temp_dir = mkdtemp(None, None, str(self.target_path.parent))
         try:
             self.cache.load()
             temp_dir_path = Path(temp_dir)
             temp_dir_path.chmod(0o755)
 
-            self._make_index_at_temp_dir(temp_dir_path)
+            self._make_index_at_temp_dir(temp_dir_path, remote_index)
             self._atomic_replace_old_index(temp_dir_path, self.target_path)
 
             if old_index:
@@ -88,7 +101,11 @@ class IndexMaker:
         # Finally replace the live index with the new one
         os.replace(final_build_name, target_path)
 
-    def _make_index_at_temp_dir(self, temp_dir_path: Path) -> None:
+    def _make_index_at_temp_dir(
+        self,
+        temp_dir_path: Path,
+        remote_index: Optional[dict[str, list[RemoteEntry]]] = None,
+    ) -> None:
         """Generate a simple repository of Python wheels in a temp dir."""
         new_wheel_file_objects: list[WheelFile] = []
         projects: dict[str, list[WheelFile]] = defaultdict(list)
@@ -120,26 +137,66 @@ class IndexMaker:
             os.link(wheel_path, target_file)
 
         self.cache.remove_stale_keys(all_wheel_files)
-        self.generate_index_pages(temp_dir_path, projects)
+        remote_extras = self._filter_remote_extras(remote_index or {}, all_wheel_files)
+        self.generate_index_pages(temp_dir_path, projects, remote_extras)
         self.cache.write_to_new(temp_dir_path)
 
+    def _fetch_remote_index(self) -> dict[str, list[RemoteEntry]]:
+        """Fetch the merge-target index, or return nothing when not merging.
+
+        :raises RemoteIndexError: if the remote index cannot be fetched.
+        """
+        if not self.merge_with:
+            return {}
+        return fetch_remote_index(self.merge_with)
+
+    @staticmethod
+    def _filter_remote_extras(
+        remote: dict[str, list[RemoteEntry]], local_wheel_filenames: set[str]
+    ) -> dict[str, list[RemoteEntry]]:
+        """Drop remote entries whose filename we already serve locally."""
+        extras: dict[str, list[RemoteEntry]] = {}
+        for canonical_name, entries in remote.items():
+            filtered = [
+                entry
+                for entry in entries
+                if entry.filename not in local_wheel_filenames
+            ]
+            if filtered:
+                extras[canonical_name] = filtered
+        return extras
+
     def generate_index_pages(
-        self, temp_dir_path: Path, projects: dict[str, list[WheelFile]]
+        self,
+        temp_dir_path: Path,
+        projects: dict[str, list[WheelFile]],
+        remote_extras: Optional[dict[str, list[RemoteEntry]]] = None,
     ) -> None:
         """Generate the index pages."""
-        index_content = str(generate_index(projects.keys()))
+        remote_extras = remote_extras or {}
+        all_project_names = set(projects.keys()) | set(remote_extras.keys())
+        index_content = str(generate_index(all_project_names))
         write_utf8_file(temp_dir_path.joinpath("index.html"), index_content)
         project_base_url = URL("../")
 
-        for canonical_name, project_files in projects.items():
+        for canonical_name in all_project_names:
+            project_files = projects.get(canonical_name, [])
+            extras = remote_extras.get(canonical_name, [])
             project_dir: Path = temp_dir_path.joinpath(canonical_name)
             project_dir.mkdir(exist_ok=True, mode=0o755)
             project_index = generate_project_page(
                 canonical_name,
                 natsorted(project_files, key=attrgetter("filename"), reverse=True),
                 project_base_url,
+                extra_entries=natsorted(
+                    extras, key=attrgetter("filename"), reverse=True
+                ),
             )
 
             write_utf8_file(project_dir.joinpath("index.html"), str(project_index))
 
-        _LOGGER.debug("Generated index pages for %s projects.", len(projects))
+        _LOGGER.debug(
+            "Generated index pages for %s projects (%s remote-only).",
+            len(all_project_names),
+            len(remote_extras),
+        )
