@@ -141,7 +141,7 @@ class WheelFile:
         metadata_string = extract_metadata_from_wheel_file(wheel_path)
         if not metadata_string:
             return None
-        metadata_path.write_text(metadata_string)
+        metadata_path.write_text(metadata_string, encoding="utf-8")
         wheel_metadata = metadata.loads(metadata_string)
         wheel_file_name = wheel_path.name
         metadata_name = wheel_metadata["Name"]
